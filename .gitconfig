@@ -1,0 +1,24 @@
+# このファイルは自動では読み込まれない。以下を実行して取り込むこと。
+#   git config --local include.path ../.gitconfig
+# 詳細は docs/setup.md を参照。
+
+# Git 2.55 以降の設定ベースのフック。.git/hooks/ にファイルを置く方式と違い、
+# リポジトリに追跡されるファイルとして管理できる。
+#
+# bash を PATH に通しておく必要はない。Git はフック実行時に同梱の bash がある
+# ディレクトリを PATH の先頭に差し込むので、PowerShell や Visual Studio から
+# コミットした場合でも Git for Windows 同梱の bash で実行される（実機で確認済み）。
+#
+# サブセクション名は event 名と別にしなければならない。event 名（pre-commit 等）を
+# そのまま使うと "hook friendly-name collides with a known event name" で拒否される。
+[hook "lithify-pre-commit"]
+  event = pre-commit
+  command = bash .git-hooks/pre-commit.sh
+
+# .gitattributes で merge=ours を指定したパス（*.lock.json 等の生成物）向け。
+# driver = true は常に成功終了するだけで何もしないコマンドを実行する、という意味で、
+# 結果として HEAD 側の内容がそのまま採用されコンフリクトが発生しなくなる。
+# この定義が無いと merge=ours 属性は黙って無視され、通常の 3-way マージで
+# コンフリクトが発生してしまう。
+[merge "ours"]
+  driver = true

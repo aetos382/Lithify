@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ContentPathMustNotBeEmpty" xml:space="preserve">
+    <value>A content path must not be empty.</value>
+    <comment>ArgumentException thrown when an empty string is passed to ContentPath.</comment>
+  </data>
+  <data name="ContentPathMustBeRelative" xml:space="preserve">
+    <value>The content path '{0}' must be relative to the site root, but it is rooted.</value>
+    <comment>ArgumentException thrown when an absolute path is passed to ContentPath.</comment>
+  </data>
+  <data name="ContentPathMustNotEscapeRoot" xml:space="preserve">
+    <value>The content path '{0}' escapes the site root.</value>
+    <comment>ArgumentException thrown when a path traverses above the site root with '..' segments.</comment>
+  </data>
+  <data name="OutputPathMustNotBeEmpty" xml:space="preserve">
+    <value>An output path must not be empty.</value>
+    <comment>ArgumentException thrown when an empty string is passed to OutputPath.</comment>
+  </data>
+  <data name="OutputPathMustBeRelative" xml:space="preserve">
+    <value>The output path '{0}' must be relative to the output root, but it is rooted.</value>
+    <comment>ArgumentException thrown when an absolute path is passed to OutputPath.</comment>
+  </data>
+  <data name="OutputPathMustNotEscapeRoot" xml:space="preserve">
+    <value>The output path '{0}' escapes the output root.</value>
+    <comment>ArgumentException thrown when a path traverses above the output root with '..' segments.</comment>
+  </data>
+  <data name="ContentFormatMustNotBeEmpty" xml:space="preserve">
+    <value>A content format name must not be empty.</value>
+    <comment>ArgumentException thrown when an empty string is passed to ContentFormat.</comment>
+  </data>
+  <data name="MetadataKeyMustNotBeEmpty" xml:space="preserve">
+    <value>A metadata key must not be empty.</value>
+    <comment>ArgumentException thrown when an empty or whitespace-only string is passed to MetadataKey.Create.</comment>
+  </data>
+  <data name="ScopeNameMustNotBeEmpty" xml:space="preserve">
+    <value>A scope name must not be empty.</value>
+    <comment>ArgumentException thrown when an empty string is passed to ScopeName.</comment>
+  </data>
+  <data name="FragmentIdMustNotBeEmpty" xml:space="preserve">
+    <value>A fragment identifier must not be empty.</value>
+    <comment>ArgumentException thrown when an empty string is passed to FragmentId.</comment>
+  </data>
+  <data name="SectionLevelOutOfRange" xml:space="preserve">
+    <value>The section level must be between {0} and {1}, but it was {2}.</value>
+    <comment>ArgumentOutOfRangeException thrown when SectionNode is constructed with a heading level outside the supported range.</comment>
+  </data>
+  <data name="MetadataValueKindMismatch" xml:space="preserve">
+    <value>The metadata value is {1}, not {0}.</value>
+    <comment>InvalidOperationException thrown when a metadata value is accessed as the wrong kind. {0} is the expected kind, {1} is the actual kind.</comment>
+  </data>
+</root>

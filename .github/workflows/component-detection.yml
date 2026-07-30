@@ -1,0 +1,44 @@
+name: Component Detection
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  dependency-submission:
+    name: Dependency Submission
+    runs-on: ubuntu-slim
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Build
+        run: >
+          dotnet build
+          --configuration Release
+          --no-incremental
+          --no-logo
+          -binaryLogger
+
+      - name: Component Detection
+        uses: advanced-security/component-detection-dependency-submission-action@31f25a8de68ae5ce2ca274bc28546a78683c15ce # v0.1.4
+        with:
+          detectorArgs: MSBuildBinaryLog=EnableIfDefaultOff
+          detectorsCategories: NuGet

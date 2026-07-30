@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Markdown\Abstractions\Markdown.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Hosting\Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Description>Markdown parser for Lithify, built on Markdig. Maps YAML front matter to DocumentMetadata.</Description>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AsciiDoc\Abstractions\AsciiDoc.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Hosting\Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AdocNet.Parser" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <Description>AsciiDoc parser for Lithify, built on AdocNet. Maps document attributes to DocumentMetadata.</Description>
+  </PropertyGroup>
+
+</Project>

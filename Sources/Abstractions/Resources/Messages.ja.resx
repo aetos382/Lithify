@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ContentPathMustNotBeEmpty" xml:space="preserve">
+    <value>コンテンツ パスを空にはできません。</value>
+    <comment>空の文字列を ContentPath に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="ContentPathMustBeRelative" xml:space="preserve">
+    <value>コンテンツ パス '{0}' はサイト ルートからの相対パスでなければなりませんが、絶対パスが指定されました。</value>
+    <comment>絶対パスを ContentPath に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="ContentPathMustNotEscapeRoot" xml:space="preserve">
+    <value>コンテンツ パス '{0}' がサイト ルートの外に出ています。</value>
+    <comment>'..' でサイト ルートより上に遡るパスを渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="OutputPathMustNotBeEmpty" xml:space="preserve">
+    <value>出力パスを空にはできません。</value>
+    <comment>空の文字列を OutputPath に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="OutputPathMustBeRelative" xml:space="preserve">
+    <value>出力パス '{0}' は出力ルートからの相対パスでなければなりませんが、絶対パスが指定されました。</value>
+    <comment>絶対パスを OutputPath に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="OutputPathMustNotEscapeRoot" xml:space="preserve">
+    <value>出力パス '{0}' が出力ルートの外に出ています。</value>
+    <comment>'..' で出力ルートより上に遡るパスを渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="ContentFormatMustNotBeEmpty" xml:space="preserve">
+    <value>コンテンツ形式の名前を空にはできません。</value>
+    <comment>空の文字列を ContentFormat に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="MetadataKeyMustNotBeEmpty" xml:space="preserve">
+    <value>メタデータ キーを空にはできません。</value>
+    <comment>空または空白のみの文字列を MetadataKey.Create に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="ScopeNameMustNotBeEmpty" xml:space="preserve">
+    <value>スコープ名を空にはできません。</value>
+    <comment>空の文字列を ScopeName に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="FragmentIdMustNotBeEmpty" xml:space="preserve">
+    <value>フラグメント識別子を空にはできません。</value>
+    <comment>空の文字列を FragmentId に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="SectionLevelOutOfRange" xml:space="preserve">
+    <value>セクションのレベルは {0} 以上 {1} 以下でなければなりませんが、{2} が指定されました。</value>
+    <comment>サポート範囲外の見出しレベルで SectionNode を構築したときに送出される ArgumentOutOfRangeException。</comment>
+  </data>
+  <data name="MetadataValueKindMismatch" xml:space="preserve">
+    <value>このメタデータ値は {0} ではなく {1} です。</value>
+    <comment>メタデータ値を誤った種類として参照したときに送出される InvalidOperationException。{0} は期待される種類、{1} は実際の種類。</comment>
+  </data>
+</root>

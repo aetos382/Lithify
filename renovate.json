@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "configMigration": true,
+  "labels": ["dependencies"],
+  "extends": [
+    "config:best-practices",
+    "customManagers:githubActionsVersions",
+    "group:dotNetCore",
+    "helpers:pinGitHubActionDigestsToSemver",
+    "security:openssf-scorecard"
+  ],
+  "timezone": "Asia/Tokyo",
+  "minimumReleaseAge": "3 days",
+  "osvVulnerabilityAlerts": true,
+  "dependencyDashboardOSVVulnerabilitySummary": "all",
+  "pinDigests": true,
+  "packageRules": [
+    {
+      "matchDatasources": ["nuget"],
+      "automerge": true,
+      "description": "Auto-merge minor/patch NuGet updates (safety is gated by CI)"
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "automerge": true,
+      "description": "Auto-merge minor/patch/pin/digest updates for trusted GitHub Actions",
+      "matchDepNames": [
+        "/^actions//",
+        "/^microsoft//",
+        "/^github//",
+        "/^advanced-security//"
+      ]
+    },
+    {
+      "matchUpdateTypes": ["pin", "pinDigest"],
+      "minimumReleaseAge": null,
+      "automerge": true,
+      "description": "Allow automerge pin updates"
+    },
+    {
+      "matchUpdateTypes": ["rollback", "replacement"],
+      "minimumReleaseAge": null,
+      "automerge": false,
+      "commitMessagePrefix": "[cautionable]",
+      "description": "Report cautionable updates"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "description": "Don't automerge major updates"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "automerge": true,
+    "minimumReleaseAge": null,
+    "addLabels": ["security"]
+  }
+}

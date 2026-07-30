@@ -1,0 +1,19 @@
+<Project>
+  <Import Project="../Directory.Build.props" />
+
+  <PropertyGroup>
+    <!-- サンプルは配布物ではないので、Lithify.* のアセンブリ名規則を適用しない。
+         Sources/Blog のアセンブリ名 (Lithify.Blog) と衝突するのを避ける。 -->
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- UseArtifactsOutput の出力先はプロジェクト名で決まるため、Sources/Blog と
+         Samples/Blog が同じ artifacts/obj/Blog を共有してしまい、
+         同時ビルド時に中間ファイルを奪い合って MSB3501 で失敗する。
+         サンプル側の出力先に接頭辞を付けて分離する。 -->
+    <ArtifactsProjectName>Sample.$(MSBuildProjectName)</ArtifactsProjectName>
+  </PropertyGroup>
+
+</Project>

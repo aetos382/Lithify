@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/ProjectTemplates/">
+    <Project Path="ProjectTemplates/Lithify.ProjectTemplates.csproj" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/Blog/Blog.csproj" />
+  </Folder>
+  <Folder Name="/Sources/">
+    <Project Path="Sources/Abstractions/Abstractions.csproj" />
+    <Project Path="Sources/AsciiDoc/Abstractions/AsciiDoc.Abstractions.csproj" />
+    <Project Path="Sources/Blog/Blog.csproj" />
+    <Project Path="Sources/Core/Core.csproj" />
+    <Project Path="Sources/Highlighting/TextMate/Highlighting.TextMate.csproj" />
+    <Project Path="Sources/Hosting/Hosting.csproj" />
+    <Project Path="Sources/Markdown/Abstractions/Markdown.Abstractions.csproj" />
+    <Project Path="Sources/Parsers/AdocNet/Parsers.AdocNet.csproj" />
+    <Project Path="Sources/Parsers/Markdig/Parsers.Markdig.csproj" />
+    <Project Path="Sources/Renderers/Html/Renderers.Html.csproj" />
+    <Project Path="Sources/Serve/Serve.csproj" />
+    <Project Path="Sources/Templates/Blazor/Templates.Blazor.csproj" />
+    <Project Path="Sources/Templates/Fluid/Templates.Fluid.csproj" />
+    <Project Path="Sources/Templates/HandlebarsNet/Templates.HandlebarsNet.csproj" />
+    <Project Path="Sources/Testing/Testing.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Abstractions/Abstractions.Tests.csproj" />
+    <Project Path="Tests/Blog/Blog.Tests.csproj" />
+    <Project Path="Tests/Core/Core.Tests.csproj" />
+    <Project Path="Tests/Parsers/AdocNet/Parsers.AdocNet.Tests.csproj" />
+    <Project Path="Tests/Parsers/Markdig/Parsers.Markdig.Tests.csproj" />
+    <Project Path="Tests/Renderers/Html/Renderers.Html.Tests.csproj" />
+    <Project Path="Tests/Serve/Serve.Tests.csproj" />
+  </Folder>
+</Solution>

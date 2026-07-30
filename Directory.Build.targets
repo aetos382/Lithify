@@ -1,0 +1,41 @@
+<Project>
+  <!--
+    Microsoft.CodeAnalysis.ResxSourceGenerator は ClassName メタデータを見て
+    リソース アクセサーを生成する。付けないと何も生成されない。
+    EmitFormatMethods は {0} を含むリソースに対し FormatXxx(p0, ...) を生成する。
+  -->
+  <ItemGroup>
+    <EmbeddedResource Update="**\*.resx">
+      <ClassName>$(RootNamespace).%(Filename)</ClassName>
+      <EmitFormatMethods>true</EmitFormatMethods>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(RestorePackagesWithLockFile)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true'">
+    <RestoreLockedMode>true</RestoreLockedMode>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <Copyright>Copyright (c) 2026 aetos</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>BSD-2-Clause-Patent</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageProjectUrl>https://github.com/aetos382/Lithify</PackageProjectUrl>
+    <IncludeSymbols Condition="'$(IncludeSymbols)' == ''">true</IncludeSymbols>
+    <GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == '' and '$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+    <GenerateSBOM Condition="'$(GenerateSBOM)' == '' and '$(Configuration)' == 'Release'">true</GenerateSBOM>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IncludeSymbols)' == 'true'">
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)README.md">
+      <Pack>true</Pack>
+      <PackagePath>/</PackagePath>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+</Project>
