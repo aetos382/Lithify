@@ -56,6 +56,7 @@ $ dotnet run -- serve
 
 - [Architecture](docs/architecture.md) — the incremental compute graph and fragment composition
 - [Setup](docs/setup.md) — setting up a development environment
+- [Roadmap](docs/roadmap.md) — what is done and what remains
 
 ## Status
 
