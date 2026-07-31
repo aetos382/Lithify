@@ -36,6 +36,22 @@
     <value>出力パス '{0}' が出力ルートの外に出ています。</value>
     <comment>'..' で出力ルートより上に遡るパスを渡したときに送出される ArgumentException。</comment>
   </data>
+  <data name="ContentPathMustBeLocal" xml:space="preserve">
+    <value>この操作にはローカルのコンテンツ パスが必要ですが、パス '{0}' は {1} です。</value>
+    <comment>ローカルのコンテンツ パスに対してのみ定義された操作を、リモートまたはインメモリのパスに適用したときに送出される InvalidOperationException。</comment>
+  </data>
+  <data name="RemoteContentPathMustBeAbsolute" xml:space="preserve">
+    <value>リモートのコンテンツ パス '{0}' は絶対 URI でなければなりません。</value>
+    <comment>相対 Uri を ContentPath.Remote に渡したときに送出される ArgumentException。</comment>
+  </data>
+  <data name="InMemoryAuthorityMustNotBeEmpty" xml:space="preserve">
+    <value>インメモリのコンテンツ パスには、名前空間の所有者を示す authority が必要です。</value>
+    <comment>空の authority を ContentPath.InMemory に渡したときに送出される ArgumentException。authority はプラグイン間の名前の衝突を防ぐためのもの。</comment>
+  </data>
+  <data name="InMemoryAuthorityMustNotContainSeparator" xml:space="preserve">
+    <value>インメモリの authority '{0}' に '/' を含めることはできません。</value>
+    <comment>区切り文字を含む authority を ContentPath.InMemory に渡したときに送出される ArgumentException。authority と名前の境界が曖昧になるため。</comment>
+  </data>
   <data name="ContentFormatMustNotBeEmpty" xml:space="preserve">
     <value>コンテンツ形式の名前を空にはできません。</value>
     <comment>空の文字列を ContentFormat に渡したときに送出される ArgumentException。</comment>

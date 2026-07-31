@@ -36,6 +36,22 @@
     <value>The output path '{0}' escapes the output root.</value>
     <comment>ArgumentException thrown when a path traverses above the output root with '..' segments.</comment>
   </data>
+  <data name="ContentPathMustBeLocal" xml:space="preserve">
+    <value>This operation requires a local content path, but the path '{0}' is {1}.</value>
+    <comment>InvalidOperationException thrown when an operation defined only for local content paths is applied to a remote or in-memory path.</comment>
+  </data>
+  <data name="RemoteContentPathMustBeAbsolute" xml:space="preserve">
+    <value>The remote content path '{0}' must be an absolute URI.</value>
+    <comment>ArgumentException thrown when a relative Uri is passed to ContentPath.Remote.</comment>
+  </data>
+  <data name="InMemoryAuthorityMustNotBeEmpty" xml:space="preserve">
+    <value>An in-memory content path requires an authority that names the owner of the namespace.</value>
+    <comment>ArgumentException thrown when an empty authority is passed to ContentPath.InMemory. The authority prevents name collisions between plugins.</comment>
+  </data>
+  <data name="InMemoryAuthorityMustNotContainSeparator" xml:space="preserve">
+    <value>The in-memory authority '{0}' must not contain '/'.</value>
+    <comment>ArgumentException thrown when an authority containing a path separator is passed to ContentPath.InMemory, which would make the boundary between authority and name ambiguous.</comment>
+  </data>
   <data name="ContentFormatMustNotBeEmpty" xml:space="preserve">
     <value>A content format name must not be empty.</value>
     <comment>ArgumentException thrown when an empty string is passed to ContentFormat.</comment>

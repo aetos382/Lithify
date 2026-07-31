@@ -16,10 +16,13 @@ namespace Lithify.AsciiDoc.Abstractions;
 /// 言語仕様が定めるのは構文・文書構造・属性・プリプロセッサ指令の意味論までである。
 /// </para>
 /// <para>
-/// safe mode が扱っていたセキュリティ上の関心（include を許すか、どのディレクトリの外に
-/// 出られないか）は AsciiDoc 固有ではない。同じ関心は Handlebars / Liquid の partial 解決にも
-/// 効くし、実際にファイル アクセスを握っているのは Lithify である。
-/// したがってそれは <c>Lithify.Abstractions</c> の <c>FileAccessPolicy</c> が担う。
+/// safe mode が扱っていた関心（include を許すか、どのディレクトリの外に出られないか）を、
+/// Lithify の語彙に置き換えて持つこともしない。<c>Lithify.Abstractions</c> の
+/// <c>ContentPath</c> が型としてサイト ルートの外を指せないようにしており、
+/// その上に重ねる設定項目は「防いでいるつもりで何も防いでいない」ものになる
+/// （設定がコンテンツと同じリポジトリにあるなら一緒に書き換えられる）。
+/// 外部から受け取ったコンテンツをビルドする構成の保護は Lithify の外——
+/// PR の承認と、ランナー側の通信・ファイル アクセスの制限——で行う。
 /// </para>
 /// </remarks>
 public sealed class AsciiDocOptions

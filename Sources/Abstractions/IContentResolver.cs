@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace Lithify.Abstractions;
 /// これは<em>ファイル</em>の経路ではない。<see cref="ContentPath"/> はローカル ファイル・
 /// リモート URI・メモリ上の内容のいずれも表しうるので、呼び出す側から見て
 /// 「ローカルかリモートか」は区別が付かず、区別する必要もない。
-/// 実際にどこから読むかは <c>IContentSourceProvider</c> が担う。
+/// 実際にどこから読むかは <see cref="IContentSourceProvider"/> が担う。
 /// </para>
 /// <para>
 /// この型自身は<em>プロバイダを跨ぐ移動の可否を判断する層</em>である。
@@ -48,7 +47,7 @@ public interface IContentResolver
     /// <remarks>
     /// <para>
     /// 解決は 2 段である。まず <paramref name="origin"/> を供給したプロバイダに
-    /// <c>IContentSourceProvider.TryResolveReference</c> で解決させ、
+    /// <see cref="IContentSourceProvider.TryResolveReference"/> で解決させ、
     /// 得られた <see cref="ContentPath"/> で<em>改めてプロバイダを選び直す</em>。
     /// 相対参照の解決規則はアドレス空間ごとに違う（ローカルはパス セグメントの結合、
     /// HTTP は RFC 3986、git はリビジョンを引き継ぐ）ため、規則を知るのはプロバイダである。
@@ -74,27 +73,33 @@ public interface IContentResolver
     /// </summary>
     /// <param name="path">開くコンテンツのパス。</param>
     /// <param name="cancellationToken">取り消しトークン。</param>
-    /// <returns>開かれたコンテンツ。</returns>
-    /// <exception cref="System.IO.FileNotFoundException">
-    /// <paramref name="path"/> に対応するコンテンツが存在しない。
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// <paramref name="path"/> を開けるプロバイダが登録されていない。
-    /// </exception>
+    /// <returns>取得の結果。</returns>
     /// <remarks>
     /// <para>
-    /// <c>IContentSourceProvider.CanOpen</c> でプロバイダを選び、そこに委ねる。
+    /// <see cref="IContentSourceProvider.CanOpen"/> でプロバイダを選び、そこに委ねる。
     /// <see cref="TryResolve"/> を経ていないパスを渡してもよい
     /// （プラグインが独自に組み立てたパスもこの経路を通れば依存として記録される）。
     /// </para>
     /// <para>
-    /// 取得できなかったことは例外で表さない。参照先が存在しないこと（コンテンツの誤り）と
-    /// 接続できないこと（環境の誤り）は区別しなければならず、後者でキャッシュを汚しては
-    /// ならないので、区別は <c>IContentSourceProvider</c> の結果の分岐で行う。
-    /// この型はその分岐を解釈した結果を返す。
+    /// <strong>取得できなかったことは例外で表さない。</strong> 参照先が存在しないこと
+    /// （コンテンツの誤り。決定的）と到達できないこと（環境の誤り。キャッシュを汚してはならない）は
+    /// 区別しなければならないので、呼び出し側が
+    /// <see cref="ContentSourceResult"/> の 4 分岐を受けて判断する。
+    /// </para>
+    /// <para>
+    /// <see cref="IContentSourceProvider.OpenAsync"/> と違って前回の検証子を取らないのは、
+    /// 前回の検証子を保持しているのがこの型（と増分グラフ）の側であり、
+    /// 呼び出し側であるパーサーやテンプレート エンジンがそれを知る必要はないためである。
+    /// </para>
+    /// <para>
+    /// <paramref name="path"/> を開けるプロバイダが 1 つも無い場合は
+    /// <see cref="ContentSourceResult.Unavailable"/> になる。
+    /// リモート取得のパッケージを参照していない環境で絶対 URI の参照が現れるのは
+    /// 構成の問題であって、参照先が存在しないこと（<see cref="ContentSourceResult.Missing"/>）
+    /// とは違う。
     /// </para>
     /// </remarks>
-    ValueTask<ContentSource> OpenAsync(
+    ValueTask<ContentSourceResult> OpenAsync(
         ContentPath path,
         CancellationToken cancellationToken = default);
 }

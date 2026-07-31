@@ -15,7 +15,7 @@
 | 2 | `.claude/`（`CLAUDE.md` + `rules/dotnet.md` + `rules/claude-md.md`）、`.git-hooks/` と `.gitconfig` による設定ベース フック、devcontainer |
 | 3 | `.github/workflows/`（`test.yml` / `release.yml` / `codeql.yml` / `component-detection.yml`） |
 | 4 | 23 プロジェクトの作成と `Lithify.slnx` への登録 |
-| 5 | `Lithify.Abstractions` — 共通 AST、`DocumentMetadata`、`FileAccessPolicy`、パーサー／レンダラー／テンプレート／ハイライターの契約（**ステップ 9 で `ContentPath` を一般化し、`FileAccessPolicy` を削除する**） |
+| 5 | `Lithify.Abstractions` — 共通 AST、`DocumentMetadata`、パーサー／レンダラー／テンプレート／ハイライターの契約（ステップ 9 で `ContentPath` を一般化し、`FileAccessPolicy` を削除済み） |
 | 6 | `Lithify.Core` — 増分計算グラフ、フラグメント合成、`IOutputStore`、`IBuildCache`、`Utf8BufferTextWriter` |
 | 7 | 形式抽象層 — `Lithify.Markdown.Abstractions` / `Lithify.AsciiDoc.Abstractions` |
 | 8 | `Lithify.Hosting` — `UseLithify()` / `ILithifyBuilder` / `RunLithifyAsync()` / `build` / `clean` |
@@ -39,6 +39,16 @@
 リモートを後付けするなら、それまでに書かれた全実装のシグネチャが変わる。
 
 ### 9.1 `ContentPath` の表現
+
+**済**（[ContentPath.cs](../Sources/Abstractions/ContentPath.cs)）。以下の設計判断はすべて型に入っている。
+実装との差は 2 点のみで、いずれも判断が細くなった方向である。
+
+- **`TryParse` は `file:` スキームをリモートとして受けない。** `C:\posts` や `\\server\share` は
+  `Uri` には `file:` の絶対 URI として解析されるので、素朴に「絶対 URI ならリモート」とすると
+  ローカルの絶対パスがリモート扱いになる。ローカルの経路に流して**絶対パスとして拒否させる**。
+  `file:` を許すと「サイト ルートの外に出られない」保証を素通りする経路にもなる
+- **`InMemory` の名前もパスと同じ規則で正規化する。** 名前に階層を持たせたい実装
+  （`layouts/post`）があり、正規形が一意でないと同じ名前が別のノードになる
 
 ```csharp
 public enum ContentPathKind { Local, Remote, InMemory }
@@ -87,7 +97,7 @@ public readonly record struct ContentPath : IComparable<ContentPath>
 `InMemory` が要るのは、文字列として直接与えられた内容やプラグインが合成した内容である。
 現在の `ContentSource.FromText` は呼び出し側に架空の `ContentPath` を作らせているが、
 これを `InMemory` にすれば `Diagnostic.Path` が `posts/x.md` を騙らずに済む。
-一方、ステップ 13 の `InMemoryContentFileResolver` は `Local` パスをメモリから供給するので
+一方、ステップ 13 の `InMemoryContentSourceProvider` は `Local` パスをメモリから供給するので
 **`Kind` は `Local` のまま**で、`IContentSourceProvider` の実装になる。
 
 #### 一意性
@@ -98,7 +108,7 @@ public readonly record struct ContentPath : IComparable<ContentPath>
 - **循環する。** `CanOpen(ContentPath)` はパスを見てプロバイダを選ぶ。つまりプロバイダはパスの関数である。
   パスがプロバイダ ID を含むと、パスを作るのにプロバイダが必要になる。
   パーサーが相対リンクから `ContentPath` を作る時点で、誰が供給するかは決まっていない
-- **プロバイダの差し替えで同一性が壊れる。** テストで `InMemoryContentFileResolver` に差し替えると
+- **プロバイダの差し替えで同一性が壊れる。** テストで `InMemoryContentSourceProvider` に差し替えると
   全パスの同一性が変わり、「同じ入力なら同じフィンガープリント」の契約テスト（16.1）が
   構造的に成立しなくなる。HTTP プロバイダをオフライン ミラーに差し替えればキャッシュが全滅する。
   `https://x/y` の内容は誰が取ってきても同じ内容であるべきである
@@ -122,6 +132,31 @@ public readonly record struct ContentPath : IComparable<ContentPath>
   同じ実体が複数の `ContentPath` から到達しうるが、それは利用者が意図した構成なので検査しない
 
 ### 9.2 `IContentSourceProvider`
+
+**型は済**（[IContentSourceProvider.cs](../Sources/Abstractions/IContentSourceProvider.cs) /
+[ContentSourceResult.cs](../Sources/Abstractions/ContentSourceResult.cs) /
+[SourceValidator.cs](../Sources/Abstractions/SourceValidator.cs) /
+[SourceRefreshMode.cs](../Sources/Abstractions/SourceRefreshMode.cs)）。**実装はまだ無い。**
+`FileSystemContentSourceProvider` と `Lithify.Sources.Http` は未着手（9.4 の採否判断が先）。
+
+実装したうえで、設計案からの変更が 3 点ある。
+
+- **`IContentSourceProvider.Id` を足した。** `SourceValidator` に `ProviderId` を持たせると決めた以上、
+  その値の出所が要る。プロバイダ自身が名乗るのが自然で、他に置き場所がない
+- **`Unavailable` は事由を持つ**（`Unavailable(string Reason, Exception? Cause)`）。
+  これを受けて `Diagnostic` を出すのだから事由が要り、中核はスキームを知らないので
+  書けるのはプロバイダだけである。`Cause` はログのためだけのもので、
+  同一性の判断や利用者向けメッセージには使わない
+- **`SourceValidator` は内容で等価比較する。** `ImmutableArray<byte>` の既定の等価性は
+  基になる配列の**参照**比較なので、コンパイラ生成の実装をそのまま使うと
+  永続化して読み直したトークンが元のものと等しくならない。ビルドを跨いで保存する型なので
+  `Equals` / `GetHashCode` を書く必要がある
+
+また `IContentResolver.OpenAsync` の戻り値を `ValueTask<ContentSource>` から
+`ValueTask<ContentSourceResult>` に変えた。remarks では「4 分岐を解釈した結果を返す」と
+書いていたが、**解釈した結果として何を返せるのかがない。** `Missing` を例外にすれば
+「決定的なのでキャッシュしてよい」性質が失われ、`Unavailable` を例外にすれば
+呼び出し側が両者を区別できない。分岐はそのまま渡す。
 
 ```csharp
 public interface IContentSourceProvider
@@ -237,6 +272,9 @@ public readonly record struct SourceValidator(
 
 ### 9.3 `FileAccessPolicy` を削除する
 
+**済。** 型を削除し、`LithifyOptions.FileAccess` を除去、`AsciiDocOptions` の remarks を
+「Lithify の語彙に置き換えて持つこともしない」理由の説明に差し替えた。以下は判断の記録である。
+
 **改名ではなく削除する。** 使用箇所は 2 つ（[LithifyOptions.cs](../Sources/Hosting/LithifyOptions.cs) の
 プロパティ 1 つと、`AsciiDocOptions` の remarks 参照）なので今なら安い
 （`IContentResolver` の remarks 参照は改名の際に除去済み）。
@@ -253,9 +291,8 @@ public readonly record struct SourceValidator(
 | `AllowIncludes` | 既定 `true`、切ると AsciiDoc の一般的な文書が壊れる、切りたい利用者がいない |
 
 制限は既に `ContentPath` が型として担っている（[PathNormalizer](../Sources/Abstractions/PathNormalizer.cs) が
-絶対パスとルート脱出を弾く）。現在の
-[remarks の「サイト ルート配下のみを許可し」](../Sources/Abstractions/FileAccessPolicy.cs)も、
-実際に保証しているのはこの型ではなく `ContentPath` である。
+絶対パスとルート脱出を弾く）。削除された remarks は「サイト ルート配下のみを許可し」と
+書いていたが、実際に保証しているのはこの型ではなく `ContentPath` だった。
 
 #### シンボリック リンクは検査しない
 
@@ -497,6 +534,9 @@ partial は `IContentResolver` 経由に一本化すれば回避できるので�
 
 #### 9.5.1 再現可能ビルドは local/remote では決まらない
 
+**`SourceStability` は済**（[SourceStability.cs](../Sources/Abstractions/SourceStability.cs)）。
+判定を行う実装（プロバイダ）はまだ無い。
+
 **軸は「ローカルかリモートか」ではなく「アドレスが一意な内容を指すか」である。**
 リモートだから直ちに再現不可能ということはない。
 
@@ -535,6 +575,14 @@ public enum SourceStability { Pinned, Unpinned }
   `https://x/v1.0.0/y`（`immutable`）と `https://x/latest/y` は別の分類になる
 
 #### 9.5.2 再現可能性を要求するオプション
+
+**型とオプションは済**（[SourceStability.cs](../Sources/Abstractions/SourceStability.cs) に
+`ReproducibilityMode`、[LithifyOptions.cs](../Sources/Hosting/LithifyOptions.cs) に
+`Reproducibility` と `SourceRefresh`）。**診断を出す実装はまだ無い。**
+9.2 の「再確認を強制／抑止するフラグ」は `SourceRefreshMode`
+（[SourceRefreshMode.cs](../Sources/Abstractions/SourceRefreshMode.cs)）として実装した。
+CLI の `--require-reproducible` / `--refresh-sources` / `--offline` はステップ 8 の
+コマンド定義側なので未着手である。
 
 内容が文章であることを踏まえると、常に厳格である必要はない。既定は緩く、
 **要求する選択肢を用意する**。
@@ -940,7 +988,7 @@ Blazor（アセンブリ内の型）も同じ枠組みに収まる。
 
 - `RecordingOutputStore(IOutputStore inner)` — `WriteCount(OutputPath)` / `History`
 - `RecordingComputeContext(IComputeContext inner)` — `EvaluationCount(NodeId)` / `EvaluationOrder`
-- `InMemoryContentFileResolver` — `Add` / `Remove`
+- `InMemoryContentSourceProvider` — `Add` / `Remove`
 - `ManualChangeSource : IChangeSource` — `Raise(ContentPath, ChangeKind)`
 
 設計上の制約:

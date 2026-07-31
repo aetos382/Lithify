@@ -58,11 +58,6 @@ public sealed class LithifyOptions
     public string? Title { get; set; }
 
     /// <summary>
-    /// ファイル アクセスのポリシーを取得または設定する。
-    /// </summary>
-    public FileAccessPolicy FileAccess { get; set; } = FileAccessPolicy.Default;
-
-    /// <summary>
     /// キャッシュを無視して全出力を書き直すかどうかを取得または設定する。
     /// </summary>
     /// <remarks>
@@ -70,6 +65,24 @@ public sealed class LithifyOptions
     /// 逃げ道はこれだけである。<c>--force</c> で指定する。
     /// </remarks>
     public bool Force { get; set; }
+
+    /// <summary>
+    /// 取得済みのコンテンツを取り直すかどうかを取得または設定する。
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Force"/> とは別の軸である。あちらは出力の書き直し、
+    /// こちらは入力の再取得を指示する。
+    /// </remarks>
+    public SourceRefreshMode SourceRefresh { get; set; } = SourceRefreshMode.Default;
+
+    /// <summary>
+    /// 再現可能性を要求する程度を取得または設定する。
+    /// </summary>
+    /// <remarks>
+    /// 内容が文章であることを踏まえ、既定は警告に留める。
+    /// 公開ビルドでは <see cref="ReproducibilityMode.Require"/> にする。
+    /// </remarks>
+    public ReproducibilityMode Reproducibility { get; set; } = ReproducibilityMode.Warn;
 
     /// <summary>
     /// 診断を警告からエラーに昇格させるかどうかを取得または設定する。

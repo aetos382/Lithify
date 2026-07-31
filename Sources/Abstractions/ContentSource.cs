@@ -85,8 +85,17 @@ public sealed class ContentSource
     /// <returns>生成された <see cref="ContentSource"/>。</returns>
     /// <exception cref="ArgumentNullException"><paramref name="text"/> が <see langword="null"/> である。</exception>
     /// <remarks>
+    /// <para>
     /// フィンガープリントは本文から計算される。テストと、
     /// すでにメモリ上にある内容を渡す場合に用いる。
+    /// </para>
+    /// <para>
+    /// <strong>対応するファイルが実在しないなら <see cref="ContentPath.InMemory"/> を渡す。</strong>
+    /// 架空の <c>posts/x.md</c> を渡すと <see cref="Diagnostic.Path"/> が実在しない位置を騙り、
+    /// 利用者はそのファイルを探すことになる。逆に、実在するローカル ファイルの内容を
+    /// すでに読み終えていて渡すだけの場合は、そのパスを渡すのが正しい
+    /// （<see cref="ContentPathKind"/> は取得手段ではなくアドレス空間を表す）。
+    /// </para>
     /// </remarks>
     public static ContentSource FromText(
         ContentPath path,
