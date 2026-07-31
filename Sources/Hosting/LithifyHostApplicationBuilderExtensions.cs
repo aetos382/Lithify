@@ -2,6 +2,7 @@ using System;
 
 using Lithify.Abstractions;
 using Lithify.Core.Content;
+using Lithify.Core.Metadata;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -57,6 +58,12 @@ public static class LithifyHostApplicationBuilderExtensions
 
         services.AddOptions<LithifyOptions>()
             .Bind(builder.Configuration.GetSection(ConfigurationSectionName));
+
+        // 別名の設定は構成から束縛しない（理由は ConfigureMetadataAliases に記す）。
+        // それでも既定で登録するのは、各パーサーが IOptions<MetadataAliasOptions> を
+        // 必須の依存として受けるためである。利用者が設定を書かなければ空の設定が渡り、
+        // 各パーサーは自分の既定をそのまま使う。
+        services.AddOptions<MetadataAliasOptions>();
 
         // コマンドライン上書きは実体としても IPostConfigureOptions としても解決される。
         // 前者はコマンドのアクションが値を書き込むため、後者は Options が読み出すため。

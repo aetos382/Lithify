@@ -8,6 +8,9 @@ using Lithify.Abstractions;
 
 namespace Lithify.Core.Content;
 
+// DiagnosticIds は Lithify.Core 直下にある。Content と Metadata の両方が使うので、
+// どちらか一方の名前空間に置くと他方が「相手の都合の型」を参照することになる。
+
 /// <summary>
 /// <see cref="IContentFormatRegistry"/> の既定実装。
 /// </summary>

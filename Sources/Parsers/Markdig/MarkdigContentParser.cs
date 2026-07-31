@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using Lithify.Abstractions;
 using Lithify.Abstractions.Ast;
+using Lithify.Core.Metadata;
 using Lithify.Markdown.Abstractions;
 
 using Markdig;
@@ -42,22 +43,33 @@ internal sealed class MarkdigContentParser :
 {
     private readonly MarkdownPipeline _pipeline;
 
+    private readonly MetadataAliasTable _aliases;
+
     /// <summary>
     /// <see cref="MarkdigContentParser"/> を生成する。
     /// </summary>
     /// <param name="options">Markdown の形式の設定。</param>
     /// <param name="engineOptions">Markdig 固有の設定。</param>
+    /// <param name="aliasOptions">利用者による別名の設定。</param>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="options"/> または <paramref name="engineOptions"/> が <see langword="null"/> である。
+    /// いずれかの引数が <see langword="null"/> である。
     /// </exception>
+    /// <remarks>
+    /// 別名の表は構築時に 1 度だけ組み立てる。利用者の設定は<em>操作</em>として記録されており
+    /// （<see cref="MetadataAliasOptions"/>）、それをこのパーサーの既定に適用したものが最終の表になる。
+    /// 文書ごとに組み立て直すと、同じ設定から同じ表が得られることを毎回計算で確かめることになる。
+    /// </remarks>
     public MarkdigContentParser(
         IOptions<MarkdownOptions> options,
-        IOptions<MarkdigOptions> engineOptions)
+        IOptions<MarkdigOptions> engineOptions,
+        IOptions<MetadataAliasOptions> aliasOptions)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(engineOptions);
+        ArgumentNullException.ThrowIfNull(aliasOptions);
 
         this._pipeline = MarkdownPipelineFactory.Create(options.Value, engineOptions.Value);
+        this._aliases = aliasOptions.Value.Apply(MarkdownAliasDefaults.Table);
     }
 
     /// <inheritdoc />
@@ -85,7 +97,7 @@ internal sealed class MarkdigContentParser :
 
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
 
-        return ReadMetadata(text, source, diagnostics);
+        return this.ReadMetadata(text, source, diagnostics);
     }
 
     /// <inheritdoc />
@@ -102,7 +114,7 @@ internal sealed class MarkdigContentParser :
 
         // メタデータは軽量パスと同じ経路で読む。Markdig が持つ
         // YamlFrontMatterBlock から読み直すと、2 つの経路が別の実装になる。
-        var metadata = ReadMetadata(text, source, diagnostics);
+        var metadata = this.ReadMetadata(text, source, diagnostics);
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -136,7 +148,7 @@ internal sealed class MarkdigContentParser :
     /// この関数は <see langword="async"/> にできない。読み取りは呼び出し側で済ませておく。
     /// </para>
     /// </remarks>
-    private static DocumentMetadata ReadMetadata(
+    private DocumentMetadata ReadMetadata(
         string text,
         ContentSource source,
         ImmutableArray<Diagnostic>.Builder diagnostics)
@@ -157,6 +169,7 @@ internal sealed class MarkdigContentParser :
 
         // 形式は source.Format ではなくこのパーサーが扱う形式にする。
         // 呼び出し側が別の形式を持つ ContentSource を渡しても、実際に解釈したのは Markdown である。
-        return WellKnownMetadataMapper.Map(metadata, ContentFormat.Markdown, source.Path, diagnostics);
+        return WellKnownMetadataMapper.Map(
+            metadata, this._aliases, ContentFormat.Markdown, source.Path, diagnostics);
     }
 }

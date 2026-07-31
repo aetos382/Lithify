@@ -1,4 +1,4 @@
-namespace Lithify.Core.Content;
+namespace Lithify.Core;
 
 /// <summary>
 /// <c>Lithify.Core</c> が報告する診断の識別子。
@@ -40,4 +40,19 @@ internal static class DiagnosticIds
     /// パーサーが <see langword="default"/> のコンテンツ形式を扱えると主張した。
     /// </summary>
     public const string ParserDeclaredEmptyFormat = "LI1002";
+
+    /// <summary>
+    /// 複数のメタデータ項目が同じ well-known キーに写せた。
+    /// </summary>
+    /// <remarks>
+    /// 写しの規則は <see cref="Lithify.Core.Metadata.WellKnownMetadataMapper"/> に 1 つあるので、
+    /// この診断は形式に依らず同じ識別子で出る。パーサーごとの帯（<c>LI31xx</c> 等）に
+    /// 置くと、同じ原因の同じ警告が形式によって別の識別子になる。
+    /// </remarks>
+    public const string WellKnownKeyAmbiguous = "LI1003";
+
+    /// <summary>
+    /// コンテンツに書かれた <c>source-format</c> をパーサーが上書きした。
+    /// </summary>
+    public const string SourceFormatOverwritten = "LI1004";
 }

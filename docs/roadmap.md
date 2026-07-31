@@ -720,7 +720,7 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
 | `MarkdigOptions` | エンジン固有の設定（`MaximumNestingDepth` / `AutoIdentifiers` / `AllowFrontMatterInMiddleOfDocument`） |
 | `FrontMatterScanner` | 文書先頭の YAML の範囲を切り出す軽量パス |
 | `FrontMatterReader` | YAML → `DocumentMetadata`（YamlDotNet はここだけ） |
-| `WellKnownMetadataMapper` | ネイティブ名 → `WellKnownMetadata` の写し |
+| `MarkdownAliasDefaults` | Markdown の別名の既定（`lastmod` / `summary` 等）。写しの**規則**は `Lithify.Core` にある |
 | `MarkdigBlockMapper` / `MarkdigInlineMapper` / `MarkdigLinkTargetMapper` / `MarkdigMappingContext` | Markdig AST → 共通 AST |
 | `DiagnosticIds` / `Resources/Messages{,.ja}.resx` | `LI31xx` の診断 |
 
@@ -740,22 +740,27 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
 - **`ParseMetadataAsync` は Markdig を通さない。** `FrontMatterScanner` が
   `YamlFrontMatterParser` と同じ境界を切る（実測で 2352 通り照合し、YAML 本体が空でない場合の不一致は 0 件）。
   メタデータを読む部分は両経路で `ReadMetadata` を共有しており、一致がコードの重複に依存しない
-- **フロント マター由来の誤りは全て診断で、例外にしない**（`LI3101`–`LI3108`）。
+- **フロント マター由来の誤りは全て診断で、例外にしない**（`LI3101`–`LI3106`）。
   1 記事の YAML の誤りでサイト全体のビルドが止まるほうが害が大きい
 - **ネイティブ名の別名は「既存ジェネレーターが広く使うもの」だけ写す。**
   `lastmod` / `last_modified_at` / `updated` → `last-modified`、`summary` / `excerpt` → `description`、
   `authors` → `author`、`language` → `lang`、`template` → `layout`。
   意味がずれるもの（Jekyll の `published` は `draft` の否定、Hugo の `categories` は `tags` と別軸）は写さない。
   推測で写すと書いた覚えのない値が効く
-- **別名が競合したら `WellKnownMetadataMapper.Aliases` で先に並んでいるものが勝ち、`LI3107` で警告する。**
-  この配列の並び順そのものが優先順の宣言である（`lastmod` → `last_modified_at` → `updated` の順は
+- **これらは仕様ではなく慣行の借用である。** Markdown のフロント マターには仕様が定めたネイティブ名が
+  存在しない（フロント マター自体が CommonMark 仕様外の拡張である）。AsciiDoc の `doctitle` / `revdate` が
+  「その形式ではそう書く」という**事実**であるのに対し、こちらは既存ジェネレーターの綴りを借りただけ。
+  **綴りが衝突したら AsciiDoc が勝つ**（Lithify は Hugo を踏襲すると決めていない。慣行が仕様に勝つ理由は無い）
+- **別名が競合したら候補の並びで先のものが勝ち、`LI1003` で警告する。**
+  並び順そのものが優先順の宣言である（`lastmod` → `last_modified_at` → `updated` の順は
   Hugo の綴りを優先するという判断）。フロント マターに書かれた順で決めるという選択肢もあるが、
   それだと「YAML のキーを並べ替えたら効く値が変わる」ことになり、
   フロント マターがキーの順序に意味を持たないことと矛盾する。
   写し先が明示的に書かれている場合は写さない（書いたものが別名に負けてはならない）
 - **`source-format` はパーサーが上書きする**（出所は `FromPath`、拡張子由来で内容には書かれていない）。
   `.md` に `source-format: asciidoc` と書かれていても事実に反し、混在サイト（R1）で
-  テンプレートがこれを見て表示を変える用途では原因を追えなくなる。黙って置き換えないよう `LI3108`（Information）で記録
+  テンプレートがこれを見て表示を変える用途では原因を追えなくなる。黙って置き換えないよう `LI1004`（Information）で記録。
+  このキーは別名の表を通さない（写しではなくパーサーが知っている事実の記録である）
 - **見出しの平坦な列 → `SectionNode` の木の組み立てはこのパーサーの責務。**
   レベルが飛んでいても（`h1` の次が `h3`）成立し、**最初の見出しより前のブロックはどの節にも属さない**
   （前書きを最初の節に押し込むと目次と本文の対応が崩れる）。スタックで組み立て、深さは `SectionNode.MaxLevel` で抑えられる
@@ -777,8 +782,60 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
   「軽量パスと完全パースの結果が一致する」という 10.1 の契約が等価性では表現できない状態だった。
   辞書の列挙順は内部の木の形（挿入順）で変わりうるので、比較もハッシュも順序に依存しない
   （`Sources/Abstractions/DictionaryEquality.cs`）
-- 追加した診断: `LI3107`（別名の競合）、`LI3108`（`source-format` の上書き）、
-  `LI3120`（リンク先を解決できない）、`LI3121`（ブロックを共通 AST に写せない）
+- 追加した診断: `LI3120`（リンク先を解決できない）、`LI3121`（ブロックを共通 AST に写せない）、
+  および `Lithify.Core` 側に `LI1003`（別名の競合）と `LI1004`（`source-format` の上書き）
+- **別名の写しを `Lithify.Core` に移し、利用者が設定できるようにした。**（下項）
+  それに伴い `LI3107` / `LI3108` は**欠番**になった。番号は再利用しない
+  （識別子は抑制の鍵として使われる前提の契約であり、別の意味で復活すると古い抑制が意図しないものを消す）
+
+#### 別名の設定（10.1 の後に加えた設計）
+
+写しの**規則**は形式に依らないが、**語彙**は形式ごとに違う。分けた:
+
+| 置き場 | 内容 |
+|---|---|
+| `Lithify.Core.Metadata.WellKnownMetadataMapper` | 規則。明示的に書かれた値は別名に負けない / 先の候補が勝つ / 競合を診断する |
+| `Lithify.Core.Metadata.MetadataAliasTable` | 「写し先 → 候補列」の不変な表 |
+| `Lithify.Core.Metadata.MetadataAliasOptions` | 利用者の設定。`ConfigureMetadataAliases()` で書く |
+| `Lithify.Parsers.Markdig.MarkdownAliasDefaults` | Markdown の既定の語彙（このパッケージ内） |
+
+```csharp
+builder.ConfigureMetadataAliases(a =>
+{
+    a.Description = ["abstract", "summary"];                            // この 2 つだけ、この優先順で
+    a.LastModified = ["modified-on", MetadataAliasCandidate.Defaults];  // 自分の語彙 → 既定
+    a.Tags = [];                                                        // tags への写しを止める
+    a[MetadataKey.Create("series")] = ["book"];                         // well-known 以外も写し先にできる
+});
+```
+
+- **設定できるのは写し先ごとの「置き換え」だけ。**「既定に足す」「既定から 1 つ取り除く」は無い。
+  差分の指定は既定の並びを**暗黙の基準**にするので、Lithify が既定の候補を増やしただけで
+  利用者が何も変えていないのに挙動が変わる（`Remove("excerpt")` が黙って無効化される、
+  `Prefer("abstract")` の後ろの並びが変わる）。置き換えなら書いた候補列がそのまま結果である
+- **既定を基準にしたい場合は `MetadataAliasCandidate.Defaults` を候補列の中に明示的に書く。**
+  暗黙の差分との違いは、既定に依存していることが設定を読めば分かる点。
+  既定が変われば結果も変わるが、それはこの標を書いた人が求めたこと
+- **`":default"` のような文字列の番兵にはしない。** `MetadataKey.Create(":default")` は通る
+  （正規化は trim・小文字化・`_`→`-` だけで `:` を拒否しない）ので実在しうるキー名と衝突しうるし、
+  綴りを間違えても普通のキー名として黙って通って静かに効かなくなる。型で列挙する
+- **写し先の指定はプロパティ（`a.Description`）とインデクサー（`a[key]`）の 2 経路。**
+  写し先は `WellKnownMetadata` の 11 個で固定なのでプロパティにできる。
+  1 写し先につき指示が 1 つ（置き換え）なので、代入で書ける。
+  **代入は「足す」を表現できないので、API の形が置き換え専用という意味を強制する**
+- **設定は形式に依らない（共通設定のみ）。** AsciiDoc の形式固有の属性（`:toc:` / `:icons:` /
+  `:imagesdir:` / `:stylesheet:`）は**描画指令**であって `WellKnownMetadata` に対応する写し先を持たず、
+  メタデータらしい属性（`description` / `keywords` / `author`）は既存ジェネレーターの語彙と意味が一致する。
+  形式ごとの段が必要になったら、置き換えという演算のまま層を 1 つ重ねればよく、既存の設定の意味は変わらない
+- **形式ごとの語彙の食い違いは、利用者の設定ではなくパーサーの既定で直す。**
+  Lithify が形式の語彙を取り違えているなら、利用者に回避策を書かせるべきではない
+- **カスタム語彙に専用のパーサーは要らない。** `MetadataValue` は**構造**（`Scalar` / `Flag` /
+  `Sequence` / `Mapping`）だけを持ち意味を持たない（`draft: true` も `Scalar("true")`。解釈は
+  読む側の `TryGetBoolean()` / `TryGetDateTimeOffset()`）。写しは `MetadataValue` を無変更で動かすだけなので、
+  `keywords: [a, b]` を `tags` に写せば `Sequence` がそのまま入る
+- **設定は構成ファイルから束縛しない。** 候補の並びは優先順という意味を持ち、
+  空の並び（写しを止める）と未設定（既定のまま）を区別する必要がある。構成の束縛はどちらも表現できない。
+  R5 のとおりサイトは C# で構成する
 
 #### 実測した Markdig 1.3.2 の挙動
 
@@ -819,7 +876,16 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
 設計上の制約:
 
 - **`doctitle` → `WellKnownMetadata.Title`、`revdate` → `WellKnownMetadata.Date` の写像はここで行う。**
-  `Lithify.Blog` 側で形式ごとに分岐させると Blog が AsciiDoc の語彙を知ることになり R4 が崩れる
+  `Lithify.Blog` 側で形式ごとに分岐させると Blog が AsciiDoc の語彙を知ることになり R4 が崩れる。
+  実装は `AsciiDocAliasDefaults`（`MarkdownAliasDefaults` に対応するもの）に置き、
+  写しの規則は `Lithify.Core` の `WellKnownMetadataMapper` を使う。
+  **こちらは仕様が定めた事実であり、Markdown 側の慣行の借用とは資格が違う**
+- **決めること: AsciiDoc の `:title:` は `WellKnownMetadata.Title` の写し先として正しいのか。**
+  `:title:` は doctitle とは別物として扱われるが、well-known キーの綴りが `title`（Hugo 由来）なので
+  正規化だけで一致し、`doctitle` に勝ってしまう。取りうる形は「AsciiDoc では `title` を写し先から外す」か
+  「well-known キーの綴りを変える」（後者は Markdown 側の自然さを損なう）。
+  **これは利用者の設定で直す話ではなく、仕様を確認してパーサーの既定を決める話である。**
+  仕様の確認は 10.2 の着手時に行う（現時点では未確認）
 - `:!toc:` 形式は `MetadataValue.Flag(false)` になる。YAML は不要
 - `doctitle` は本文のレベル 0 見出しから来るので、出所は `MetadataProvenance.Derived(見出しの位置)`。
   `revdate` → `date` は `Mapped`。`Declared` と `Derived` の区別があると

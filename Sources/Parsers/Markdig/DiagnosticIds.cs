@@ -46,15 +46,12 @@ internal static class DiagnosticIds
     /// </summary>
     public const string FrontMatterRecursiveAlias = "LI3106";
 
-    /// <summary>
-    /// 複数のフロント マターの項目が同じ well-known キーに写せた。
-    /// </summary>
-    public const string WellKnownKeyAmbiguous = "LI3107";
-
-    /// <summary>
-    /// フロント マターに書かれた <c>source-format</c> をパーサーが上書きした。
-    /// </summary>
-    public const string SourceFormatOverwritten = "LI3108";
+    // LI3107 と LI3108 は欠番である。well-known キーへの写しに関する診断
+    // （候補の競合と source-format の上書き）は Lithify.Core に移り、
+    // LI1003 / LI1004 になった。写しの規則が形式に依らず 1 箇所にあるので、
+    // 同じ原因の同じ警告が形式によって別の識別子になってはならない。
+    // 番号を再利用しないのは、識別子が抑制の鍵として使われる前提の契約であり、
+    // 別の意味で復活すると古い抑制が意図しないものを消すためである。
 
     /// <summary>
     /// リンクの参照先を URI としてもサイト内のパスとしても解釈できなかった。

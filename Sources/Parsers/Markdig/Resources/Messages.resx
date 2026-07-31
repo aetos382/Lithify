@@ -36,14 +36,6 @@
     <value>The front matter entry '{0}' refers to itself through a YAML anchor, so the value was replaced with an empty one.</value>
     <comment>Warning diagnostic LI3106. {0} is the normalized key whose value contains the cycle.</comment>
   </data>
-  <data name="WellKnownKeyAmbiguous" xml:space="preserve">
-    <value>Both '{0}' and '{1}' can supply '{2}'; '{0}' wins and '{1}' is used only under its own name.</value>
-    <comment>Warning diagnostic LI3107. {0} is the winning alias, {1} the ignored alias, {2} the well-known key.</comment>
-  </data>
-  <data name="SourceFormatOverwritten" xml:space="preserve">
-    <value>'{0}' was written as '{1}', but this content is parsed as '{2}', so the value was replaced. This key records the format the parser handled and cannot be set from the front matter.</value>
-    <comment>Information diagnostic LI3108. {0} is the key name, {1} the declared value, {2} the actual format.</comment>
-  </data>
   <data name="LinkTargetNotResolvable" xml:space="preserve">
     <value>The link target '{0}' could not be interpreted as a URI or as a path within the site, so it was left as written.</value>
     <comment>Warning diagnostic LI3120. {0} is the link target as written in the source.</comment>

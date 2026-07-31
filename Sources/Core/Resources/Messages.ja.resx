@@ -32,4 +32,24 @@
     <value>パーサー '{0}' は既定 (空) のコンテンツ形式を扱えると主張していますが、これは無視されます。</value>
     <comment>Warning diagnostic LI1002. {0} is the parser type name.</comment>
   </data>
+  <data name="MetadataAliasTargetMustNotBeEmpty" xml:space="preserve">
+    <value>メタデータの別名の写し先を既定 (空) のキーにすることはできません。</value>
+    <comment>ArgumentException thrown when a default MetadataKey is passed to MetadataAliasTable.Set or the MetadataAliasOptions indexer.</comment>
+  </data>
+  <data name="MetadataAliasCandidateMustNotBeEmpty" xml:space="preserve">
+    <value>メタデータの別名の候補を既定 (空) のキーにすることはできません。</value>
+    <comment>ArgumentException thrown when a default MetadataKey is passed to MetadataAliasCandidate.Create or appears in the aliases passed to MetadataAliasTable.Set.</comment>
+  </data>
+  <data name="MetadataAliasCandidateIsDefaults" xml:space="preserve">
+    <value>この別名の候補はパーサーの既定の候補を指す標であり、キーの名前を持ちません。Key を読む前に IsDefaults を確認してください。</value>
+    <comment>InvalidOperationException thrown when MetadataAliasCandidate.Key is read on the Defaults marker.</comment>
+  </data>
+  <data name="WellKnownKeyAmbiguous" xml:space="preserve">
+    <value>'{0}' と '{1}' はどちらも '{2}' を供給できます。'{0}' が採用され、'{1}' はそれ自身の名前でのみ読めます。</value>
+    <comment>Warning diagnostic LI1003. {0} is the winning alias, {1} the ignored alias, {2} the well-known key.</comment>
+  </data>
+  <data name="SourceFormatOverwritten" xml:space="preserve">
+    <value>'{0}' に '{1}' と書かれていますが、このコンテンツは '{2}' として解析されるため、値を置き換えました。このキーはパーサーが扱った形式を記録するものであり、コンテンツからは設定できません。</value>
+    <comment>Information diagnostic LI1004. {0} is the key name, {1} the declared value, {2} the actual format.</comment>
+  </data>
 </root>

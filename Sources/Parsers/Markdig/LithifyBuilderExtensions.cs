@@ -1,6 +1,7 @@
 using System;
 
 using Lithify.Abstractions;
+using Lithify.Core.Metadata;
 using Lithify.Hosting;
 using Lithify.Markdown.Abstractions;
 
@@ -59,7 +60,8 @@ public static class LithifyBuilderExtensions
             ServiceDescriptor.Singleton<IContentParser, MarkdigContentParser>(
                 static provider => new MarkdigContentParser(
                     provider.GetRequiredService<IOptions<MarkdownOptions>>(),
-                    provider.GetRequiredService<IOptions<MarkdigOptions>>())));
+                    provider.GetRequiredService<IOptions<MarkdigOptions>>(),
+                    provider.GetRequiredService<IOptions<MetadataAliasOptions>>())));
 
         return builder;
     }

@@ -32,4 +32,24 @@
     <value>The parser '{0}' declares support for the default (empty) content format, which is ignored.</value>
     <comment>Warning diagnostic LI1002. {0} is the parser type name.</comment>
   </data>
+  <data name="MetadataAliasTargetMustNotBeEmpty" xml:space="preserve">
+    <value>A metadata alias must not target the default (empty) metadata key.</value>
+    <comment>ArgumentException thrown when a default MetadataKey is passed to MetadataAliasTable.Set or the MetadataAliasOptions indexer.</comment>
+  </data>
+  <data name="MetadataAliasCandidateMustNotBeEmpty" xml:space="preserve">
+    <value>A metadata alias candidate must not be the default (empty) metadata key.</value>
+    <comment>ArgumentException thrown when a default MetadataKey is passed to MetadataAliasCandidate.Create or appears in the aliases passed to MetadataAliasTable.Set.</comment>
+  </data>
+  <data name="MetadataAliasCandidateIsDefaults" xml:space="preserve">
+    <value>This alias candidate is the marker for the parser's default candidates and does not name a key. Check IsDefaults before reading Key.</value>
+    <comment>InvalidOperationException thrown when MetadataAliasCandidate.Key is read on the Defaults marker.</comment>
+  </data>
+  <data name="WellKnownKeyAmbiguous" xml:space="preserve">
+    <value>Both '{0}' and '{1}' can supply '{2}'; '{0}' wins and '{1}' is used only under its own name.</value>
+    <comment>Warning diagnostic LI1003. {0} is the winning alias, {1} the ignored alias, {2} the well-known key.</comment>
+  </data>
+  <data name="SourceFormatOverwritten" xml:space="preserve">
+    <value>'{0}' was written as '{1}', but this content is parsed as '{2}', so the value was replaced. This key records the format the parser handled and cannot be set from the content.</value>
+    <comment>Information diagnostic LI1004. {0} is the key name, {1} the declared value, {2} the actual format.</comment>
+  </data>
 </root>
