@@ -7,6 +7,10 @@
 各ステップの「設計上の制約」は、**骨格段階で契約に織り込まないと後から直せない**ものだけを挙げている。
 後から足せるものは意図的に書いていない。
 
+**まだ決めていないことは [open-questions.md](open-questions.md) に索引がある。**
+この文書の各節に散っている「未決」をそこから引ける。決定はこの文書の該当節に書き、
+索引からは消す（決定が 2 箇所にあってはならない）。
+
 ## 完了済み
 
 | # | 内容 |
@@ -880,16 +884,21 @@ builder.ConfigureMetadataAliases(a =>
   実装は `AsciiDocAliasDefaults`（`MarkdownAliasDefaults` に対応するもの）に置き、
   写しの規則は `Lithify.Core` の `WellKnownMetadataMapper` を使う。
   **こちらは仕様が定めた事実であり、Markdown 側の慣行の借用とは資格が違う**
-- **決めること: AsciiDoc の `:title:` は `WellKnownMetadata.Title` の写し先として正しいのか。**
-  `:title:` は doctitle とは別物として扱われるが、well-known キーの綴りが `title`（Hugo 由来）なので
-  正規化だけで一致し、`doctitle` に勝ってしまう。取りうる形は「AsciiDoc では `title` を写し先から外す」か
-  「well-known キーの綴りを変える」（後者は Markdown 側の自然さを損なう）。
-  **これは利用者の設定で直す話ではなく、仕様を確認してパーサーの既定を決める話である。**
-  仕様の確認は 10.2 の着手時に行う（現時点では未確認）
+- **文書タイトルの解決順は仕様が定めている**（[Asciidoctor: Document Title](https://docs.asciidoctor.org/asciidoc/latest/document/title/) を確認済み）:
+  レベル 0 見出し → `:doctitle:`（明示代入）→ `:title:`（フォールバック）。
+  レベル 0 見出しは**自動的に `doctitle` 属性に代入される**ので、候補列に「レベル 0 見出し」を
+  並べる必要はなく、`AsciiDocAliasDefaults` に `["doctitle", "title"]` と書けば仕様の順になる
+- **`:title:` は 2 つの役を持つ。** HTML の `<head><title>` の値であり、**かつ**
+  文書タイトルの最後の手段である。AsciiDoc は「文書タイトル」と「`<head>` のタイトル」を
+  別の概念として持つが、**`WellKnownMetadata` には後者に対応するキーが無い**
+- **未決: 写し先 `title` と AsciiDoc のネイティブ属性 `:title:` の綴りが衝突している。**
+  今のコードでは `["doctitle", "title"]` という宣言が効かず、`:title:` がある文書で
+  `doctitle` が写される前に弾かれる（仕様の逆）。
+  **10.2 の着手前に決める。** 案と材料は [open-questions.md](open-questions.md) の項目 1
 - `:!toc:` 形式は `MetadataValue.Flag(false)` になる。YAML は不要
 - `doctitle` は本文のレベル 0 見出しから来るので、出所は `MetadataProvenance.Derived(見出しの位置)`。
-  `revdate` → `date` は `Mapped`。`Declared` と `Derived` の区別があると
-  「題名を直すには見出しを直す」ことが診断で示せる
+  `:doctitle:` の明示代入は `Declared`、`revdate` → `date` は `Mapped`。
+  `Declared` と `Derived` の区別があると「題名を直すには見出しを直す」ことが診断で示せる
 - **Asciidoctor の `SafeMode` は `AsciiDoc.Abstractions` に入れない。** 必要なら
   このパッケージの engine-specific オプションに置く。そもそも safe mode は Asciidoctor という
   実装の機能であって AsciiDoc 仕様ではないので、対応物を用意する義務はない（9.3 参照）
