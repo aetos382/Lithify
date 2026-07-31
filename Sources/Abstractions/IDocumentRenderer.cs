@@ -83,9 +83,9 @@ public interface IRenderContext
     ISyntaxHighlighter SyntaxHighlighter { get; }
 
     /// <summary>
-    /// 外部ファイルを読む経路を取得する。
+    /// 外部のコンテンツを読む経路を取得する。
     /// </summary>
-    IContentFileResolver FileResolver { get; }
+    IContentResolver ContentResolver { get; }
 
     /// <summary>
     /// サイト内参照を出力 URL に写す。

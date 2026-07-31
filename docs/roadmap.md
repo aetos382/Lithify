@@ -34,7 +34,7 @@
 `IContentSourceProvider` に委ねる。
 
 なぜ骨格段階でやるかというと、`bool` のフラグは後からいつでも足せるが、
-`IContentFileResolver.TryResolve` の出力、`ContentSource.Path`、`Diagnostic.Path` が
+`IContentResolver.TryResolve` の出力、`ContentSource.Path`、`Diagnostic.Path` が
 いずれも `ContentPath` であるという決定は後から変えられないからである。
 リモートを後付けするなら、それまでに書かれた全実装のシグネチャが変わる。
 
@@ -229,12 +229,17 @@ public readonly record struct SourceValidator(
   変換（ローカルなら `SourceRoot` と結合した完全修飾パス、HTTP なら絶対 URI）は
   プロバイダの内部で行い、外に出さない。9.6 の「変換を 1 箇所に集約する」の
   「1 箇所」とはプロバイダのことである
-- `IContentFileResolver` は `IContentResolver` に改名する。ファイルに限らなくなるため
+- ~~`IContentFileResolver` は `IContentResolver` に改名する。ファイルに限らなくなるため~~
+  **済**（[IContentResolver.cs](../Sources/Abstractions/IContentResolver.cs)）。
+  型と remarks は先行して書き換えたが、**実装はまだ無い**（`IContentSourceProvider` が
+  未定義なので remarks 中の参照は `<c>` で書いてある）。
+  `IRenderContext.FileResolver` も `ContentResolver` に改名済み
 
 ### 9.3 `FileAccessPolicy` を削除する
 
-**改名ではなく削除する。** 使用箇所は 3 つ（[LithifyOptions.cs](../Sources/Hosting/LithifyOptions.cs) の
-プロパティ 1 つと、`IContentFileResolver` / `AsciiDocOptions` の remarks 参照）なので今なら安い。
+**改名ではなく削除する。** 使用箇所は 2 つ（[LithifyOptions.cs](../Sources/Hosting/LithifyOptions.cs) の
+プロパティ 1 つと、`AsciiDocOptions` の remarks 参照）なので今なら安い
+（`IContentResolver` の remarks 参照は改名の際に除去済み）。
 
 この型は「Asciidoctor の safe mode に対応するものが必要だろう」という前提で作られたが、
 **Asciidoctor の safe mode は Asciidoctor という実装の機能であって AsciiDoc 仕様ではない。**
@@ -384,7 +389,7 @@ Windows の `MAX_PATH` については BCL が対処するので、Lithify 側�
 参照先が変わってしまうので、これは仕様上の要求である。
 
 起点を `origin` で受け取る形は既に正しい
-（[`IContentFileResolver.TryResolve`](../Sources/Abstractions/IContentFileResolver.cs) が
+（[`IContentResolver.TryResolve`](../Sources/Abstractions/IContentResolver.cs) が
 `origin` を取り、[`ContentPath.Combine`](../Sources/Abstractions/ContentPath.cs) が
 そのディレクトリに結合して `..` を正規化する）。**解決そのものは 9.2 のとおり
 プロバイダの `TryResolveReference` に委ねる**（規則がアドレス空間ごとに違うため）。
@@ -753,7 +758,19 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
   コンテンツと同じ手段（git submodule、シンボリック リンク）で配下に持ち込む。
   **`TemplateSource.Path` が `default` を許しているのはこれと矛盾しない**
   （文字列から直接与えたテンプレートは `InMemory` か、由来なしになる）
-- 拡張メソッド名は実装名に合わせる: `UseHandlebarsNet()` / `UseFluid()` / `UseBlazor()`
+- **`ContentFormat` にテンプレート言語（`handlebars` 等）を入れてはならない。**
+  軸が違う。`ContentFormat` は「どのパーサーで文書として解析するか」を引く鍵であり、
+  テンプレート言語は「どのエンジンでテンプレートとして実行するか」である。
+  前者はパースされて AST になり出力ページになるもの、後者は AST を受け取って出力を作る側で、
+  `.hbs` は前者ではない。エンジンの選択は `ITemplateEngine.Name` が既に担っている。
+  入れると `IContentFormatRegistry.TryGetParser` が「`.hbs` を扱えるパーサーが無い」と
+  言うことになるが、それはそもそも問うべきでない質問である
+- **`SourceRoot` 配下に置く帰結として、テンプレートをコンテンツの列挙から除く規則が要る。**
+  `_templates/` 配下がページとして出力されてはならない。`ContentPath` で名付けられること
+  （`IContentResolver` が開けること）と、列挙対象のコンテンツであることは**別の性質である**。
+  この区別は現状の roadmap に書かれていない。`static/` も同じ問題を持つが、
+  そちらは `StaticFilePatterns` があるので既に区別されている。
+  **規則の形（規約による除外か、明示的な設定か）はステップ 10.4 の判断事項とする**
 
 ### 10.5 `Lithify.Blog`
 
