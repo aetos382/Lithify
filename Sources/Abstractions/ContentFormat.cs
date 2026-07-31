@@ -13,7 +13,16 @@ namespace Lithify.Abstractions;
 /// 利用者は任意の名前で新しい形式を作れる。
 /// </para>
 /// <para>
-/// 名前は小文字に正規化され、比較は大文字小文字を区別しない。
+/// 名前は正規化<em>しない</em>。<see cref="ContentFormat"/> を組み立てるのは
+/// パーサー パッケージ（<see cref="IContentParser.SupportedFormats"/>）と拡張子の対応表
+/// （<see cref="IContentFormatRegistry.TryGetFormat"/>）だけで、いずれもコードである。
+/// 利用者が書くコンテンツとの接触面はファイルの<em>拡張子</em>であって形式名ではないので、
+/// 表記の揺れは吸収すべき入力の多様性ではなく単にコードの誤りである
+/// （この点が、利用者の書いた名前を受け取る <see cref="MetadataKey"/> との違いである）。
+/// </para>
+/// <para>
+/// したがって比較は <see cref="StringComparison.Ordinal"/> で、厳密に一致しない名前は
+/// 別の形式として扱われる。誤りは「その形式を扱えるパーサーが無い」という形で露見する。
 /// </para>
 /// </remarks>
 public readonly record struct ContentFormat
@@ -25,22 +34,17 @@ public readonly record struct ContentFormat
     /// </summary>
     /// <param name="value">形式の名前。</param>
     /// <exception cref="ArgumentNullException"><paramref name="value"/> が <see langword="null"/> である。</exception>
-    /// <exception cref="ArgumentException"><paramref name="value"/> が空または空白のみである。</exception>
+    /// <exception cref="ArgumentException"><paramref name="value"/> が空である。</exception>
+    /// <remarks>
+    /// 空白のみの名前や前後に空白を含む名前は弾かず、そのまま保持する。
+    /// 呼び出し側はコードなので、それらは書いた通りに一致しない名前として扱われる。
+    /// </remarks>
     public ContentFormat(
         string value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        ArgumentException.ThrowIfNullOrEmpty(value);
 
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException(Messages.ContentFormatMustNotBeEmpty, nameof(value));
-        }
-
-        // 形式名は小文字が正規形。ファイル拡張子や MIME サブタイプと突き合わせるため、
-        // 大文字への正規化 (CA1308 の推奨) では用を成さない。
-#pragma warning disable CA1308 // Normalize strings to uppercase
-        this._value = value.Trim().ToLowerInvariant();
-#pragma warning restore CA1308
+        this._value = value;
     }
 
     /// <summary>
@@ -59,19 +63,17 @@ public readonly record struct ContentFormat
     public static ContentFormat Html { get; } = new("html");
 
     /// <summary>
-    /// 正規化された形式の名前を取得する。
+    /// 形式の名前を取得する。
     /// </summary>
     /// <remarks>
     /// <see langword="default"/> の <see cref="ContentFormat"/> では空文字列になる。
     /// </remarks>
-    public string Value =>
-        this._value ?? string.Empty;
+    public string Value => this._value ?? string.Empty;
 
     /// <summary>
     /// この形式が値を持たない（<see langword="default"/> である）かどうかを示す値を取得する。
     /// </summary>
-    public bool IsEmpty =>
-        string.IsNullOrEmpty(this._value);
+    public bool IsEmpty => string.IsNullOrEmpty(this._value);
 
     /// <inheritdoc />
     public bool Equals(
@@ -87,7 +89,7 @@ public readonly record struct ContentFormat
     }
 
     /// <summary>
-    /// 正規化された形式の名前を返す。
+    /// 形式の名前を返す。
     /// </summary>
     /// <returns>形式の名前。</returns>
     public override string ToString()
