@@ -27,6 +27,15 @@ namespace Lithify.Abstractions;
 /// <see cref="MetadataProvenance"/> に記す。出所の記録は任意であり、
 /// 記録しない項目は <see cref="MetadataOrigin.Unknown"/> として読める。
 /// </para>
+/// <para>
+/// <strong>等価性は 2 つの辞書の内容で決まる。</strong>
+/// <see cref="ImmutableDictionary{TKey, TValue}"/> の既定の等価性は参照比較なので、
+/// <c>record</c> が生成する <c>Equals</c> のままでは、同じフロント マターから
+/// 別々に組み立てた 2 つの <see cref="DocumentMetadata"/> が等しくならない。
+/// <see cref="IContentParser.ParseMetadataAsync"/> の結果が
+/// <c>ParseAsync(...).Document.Metadata</c> と一致するという契約は等価性で検証されるので、
+/// 内容で比較しなければ契約が表現できない。
+/// </para>
 /// </remarks>
 public sealed record DocumentMetadata
 {
@@ -49,6 +58,32 @@ public sealed record DocumentMetadata
     /// （出所は診断の補助であり、不整合があっても値の読み取りは壊れないため）。
     /// </remarks>
     public ImmutableDictionary<MetadataKey, MetadataProvenance> Origins { get; init; } = [];
+
+    /// <summary>
+    /// 項目と出所の内容が等しいかどうかを判定する。
+    /// </summary>
+    /// <param name="other">比較対象。</param>
+    /// <returns>等しい場合は <see langword="true"/>。</returns>
+    public bool Equals(
+        DocumentMetadata? other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return other is not null &&
+            DictionaryEquality.Equals(this.Entries, other.Entries) &&
+            DictionaryEquality.Equals(this.Origins, other.Origins);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            DictionaryEquality.GetHashCode(this.Entries),
+            DictionaryEquality.GetHashCode(this.Origins));
+    }
 
     /// <summary>
     /// 指定したキーの値を取得する。

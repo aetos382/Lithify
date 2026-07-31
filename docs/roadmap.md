@@ -708,14 +708,23 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
 `UseLithify()` はパーサーもレンダラーもテンプレート エンジンも登録しない（既定で何かを登録すると
 「差し替え可能」という建前が崩れる）ので、ここで登録されるものが唯一の供給源になる。
 
-### 10.1 `Lithify.Parsers.Markdig`
+### 10.1 `Lithify.Parsers.Markdig` — 済
 
-- `MarkdigContentParser : IContentParser` — `SupportedFormats` は `[ContentFormat.Markdown]`
-- `MarkdownOptions` → `MarkdownPipelineBuilder` の写像（`MarkdownFlavor` / `Tables` / `Footnotes` …）
-- `YamlFrontMatterExtension` でフロントマターを切り出し、YamlDotNet で `MetadataValue` に写す
-- `UseMarkdig()` 拡張メソッド
+構成したファイル:
 
-設計上の制約:
+| ファイル | 役割 |
+|---|---|
+| `MarkdigContentParser` | `IContentParser` 実装。`SupportedFormats` は `[ContentFormat.Markdown]` |
+| `LithifyBuilderExtensions` | `UseMarkdig()` |
+| `MarkdownPipelineFactory` | `MarkdownOptions` + `MarkdigOptions` → `MarkdownPipeline`（純粋関数） |
+| `MarkdigOptions` | エンジン固有の設定（`MaximumNestingDepth` / `AutoIdentifiers` / `AllowFrontMatterInMiddleOfDocument`） |
+| `FrontMatterScanner` | 文書先頭の YAML の範囲を切り出す軽量パス |
+| `FrontMatterReader` | YAML → `DocumentMetadata`（YamlDotNet はここだけ） |
+| `WellKnownMetadataMapper` | ネイティブ名 → `WellKnownMetadata` の写し |
+| `MarkdigBlockMapper` / `MarkdigInlineMapper` / `MarkdigLinkTargetMapper` / `MarkdigMappingContext` | Markdig AST → 共通 AST |
+| `DiagnosticIds` / `Resources/Messages{,.ja}.resx` | `LI31xx` の診断 |
+
+守った制約:
 
 - **`ParseMetadataAsync` は文書先頭のフロントマターだけを読む。** `ParseAsync(...).Document.Metadata` と
   必ず一致しなければならない（契約テストで検証する）。ここを本文パースに委譲すると
@@ -725,6 +734,80 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
   `MetadataProvenance.Mapped(写し元のキー)` を、フロントマターに直接書かれた項目には
   `MetadataProvenance.Declared(位置)` を付ける
 - **YamlDotNet への依存はこのパッケージだけ。** `Lithify.Abstractions` に漏らさない
+
+#### 設計上の判断（10.1 で決めたこと）
+
+- **`ParseMetadataAsync` は Markdig を通さない。** `FrontMatterScanner` が
+  `YamlFrontMatterParser` と同じ境界を切る（実測で 2352 通り照合し、YAML 本体が空でない場合の不一致は 0 件）。
+  メタデータを読む部分は両経路で `ReadMetadata` を共有しており、一致がコードの重複に依存しない
+- **フロント マター由来の誤りは全て診断で、例外にしない**（`LI3101`–`LI3108`）。
+  1 記事の YAML の誤りでサイト全体のビルドが止まるほうが害が大きい
+- **ネイティブ名の別名は「既存ジェネレーターが広く使うもの」だけ写す。**
+  `lastmod` / `last_modified_at` / `updated` → `last-modified`、`summary` / `excerpt` → `description`、
+  `authors` → `author`、`language` → `lang`、`template` → `layout`。
+  意味がずれるもの（Jekyll の `published` は `draft` の否定、Hugo の `categories` は `tags` と別軸）は写さない。
+  推測で写すと書いた覚えのない値が効く
+- **別名が競合したら `WellKnownMetadataMapper.Aliases` で先に並んでいるものが勝ち、`LI3107` で警告する。**
+  この配列の並び順そのものが優先順の宣言である（`lastmod` → `last_modified_at` → `updated` の順は
+  Hugo の綴りを優先するという判断）。フロント マターに書かれた順で決めるという選択肢もあるが、
+  それだと「YAML のキーを並べ替えたら効く値が変わる」ことになり、
+  フロント マターがキーの順序に意味を持たないことと矛盾する。
+  写し先が明示的に書かれている場合は写さない（書いたものが別名に負けてはならない）
+- **`source-format` はパーサーが上書きする**（出所は `FromPath`、拡張子由来で内容には書かれていない）。
+  `.md` に `source-format: asciidoc` と書かれていても事実に反し、混在サイト（R1）で
+  テンプレートがこれを見て表示を変える用途では原因を追えなくなる。黙って置き換えないよう `LI3108`（Information）で記録
+- **見出しの平坦な列 → `SectionNode` の木の組み立てはこのパーサーの責務。**
+  レベルが飛んでいても（`h1` の次が `h3`）成立し、**最初の見出しより前のブロックはどの節にも属さない**
+  （前書きを最初の節に押し込むと目次と本文の対応が崩れる）。スタックで組み立て、深さは `SectionNode.MaxLevel` で抑えられる
+- **リンクの分類だけを行い、解決はしない**（`MarkdigLinkTargetMapper`）。パーサーはサイト全体を知らないので、
+  「サイト ルートの外」と「まだ書いていないページ」を区別できない。解決できないものは
+  `LinkTarget.Unresolved` にして `LI3120` で警告する
+- **char → UTF-8 の境界を動かさない。** メタデータの読み取りは文字列のままで、
+  `FrontMatterScanner.FrontMatter` は `ref struct` で `ReadOnlySpan<char>` を運ぶ
+  （切り出した時点で文字列を作ると軽量パスが必ず 1 回の割り当てを払う）
+
+#### 差分（他の場所に及んだ変更）
+
+- **`MarkdownOptions.Attributes` を追加した。** `## 見出し {#anchor}` は
+  `UseGenericAttributes()` が無いと見出し文字列の一部として読まれ（実測: ID は `head-my-id` になり
+  リテラル テキストに `{#my-id}` が残る）、`SectionNode.AnchorId` に到達する手段が存在しなかった。
+  既定は無効で、無効の間 Markdown の見出しは明示的なアンカーを持てない（レンダラーが生成する）
+- **`DocumentMetadata` / `MetadataValue.Sequence` / `MetadataValue.Mapping` の等価性を内容比較に直した。**
+  `record` だがメンバーが `ImmutableDictionary` / `ImmutableArray` なので既定の `Equals` は**参照比較**であり、
+  「軽量パスと完全パースの結果が一致する」という 10.1 の契約が等価性では表現できない状態だった。
+  辞書の列挙順は内部の木の形（挿入順）で変わりうるので、比較もハッシュも順序に依存しない
+  （`Sources/Abstractions/DictionaryEquality.cs`）
+- 追加した診断: `LI3107`（別名の競合）、`LI3108`（`source-format` の上書き）、
+  `LI3120`（リンク先を解決できない）、`LI3121`（ブロックを共通 AST に写せない）
+
+#### 実測した Markdig 1.3.2 の挙動
+
+写しの分岐はこれらに依存しているので、Markdig を更新したら確かめ直す。
+
+- `EmphasisInline` は (`DelimiterChar`, `DelimiterCount`) の対。`~`×1 が下付き / ×2 が取り消し線、
+  `^` が上付き、`=`×2 が強調表示、`+`×2 が挿入（**これに対応する `EmphasisKind` は無い**）、
+  `*` / `_` は 1 個で強調 2 個で太字。`***a***` は入れ子で来る
+- `AutolinkInline.IsEmail` が真のとき `Url` に **`mailto:` が付かない**。補わないと
+  サイト内の相対パスとして分類される
+- 裸の `https://z.w` は `AutolinkInline` ではなく `LinkInline { IsAutoLink = true }` になる
+- `HtmlEntityInline.Transcoded` が復号済みのテキストを持つ。これを使えば
+  「テキストは常にエスケープする」という規則だけでレンダラーが正しくなる
+- `FootnoteGroup` → `Footnote { Label = "^1" }`。各脚注の本文の末尾に
+  `FootnoteLink { IsBackLink = true }` が付く（HTML 出力の都合なので落とす）
+- `ListBlock.OrderedStart` は文字列で箇条書きでは空。開始番号は最初の `ListItemBlock.Order` から取る
+- `TableColumnDefinition.Alignment` は `TableColumnAlign?`
+- `####### seven` は見出しではなく段落
+- インラインの `Line` / `Column` は `UsePreciseSourceLocation()` を有効にしても `0, 0` のままになることがある。
+  0 起算 → 1 起算の変換で 1 を足すと**1 行 1 桁という誤った位置**になるので、両方 0 なら不明のまま返す
+  （変換は `MarkdigMappingContext.Locate` に一元化）
+
+#### `Markdig` という名前空間の落とし穴
+
+`namespace Lithify.Parsers.Markdig` の中では `Markdig` がこの名前空間の一部に束縛されるので、
+**`Markdig.Helpers.StringLineGroup` のような修飾名は解決できない**（`Lithify.Parsers.Markdig.Helpers` を探す）。
+`using Markdig.Helpers;` を書いて非修飾で使うか、`global::Markdig.Markdown.Parse(...)` のように
+`global::` を付ける。XML doc の cref も同じ規則で落ちる。
+同じ理由で `Markdown` も `Lithify.Markdown` に束縛される。
 
 ### 10.2 `Lithify.Parsers.AdocNet`
 
@@ -926,13 +1009,60 @@ Blazor（アセンブリ内の型）も同じ枠組みに収まる。
 - **既定値の層は増分ビルドの依存として扱う。** `posts/` の既定値の変更は `posts/` 配下の全文書を
   無効化するが、他は無効化しない。層を1つのノードにまとめると1文書の既定値の変更で全ページが落ちる
 
-### 10.6 パーサーのディスパッチ
+### 10.6 パーサーのディスパッチ — 済
 
-`IContentFormatRegistry` の既定実装（`.md` / `.markdown` → markdown、`.adoc` / `.asciidoc` → asciidoc）を
-`Lithify.Core` または `Lithify.Hosting` に置く。
+`Lithify.Core` の `Content/` に置いた。
+
+| ファイル | 役割 |
+|---|---|
+| `ContentFormatRegistry` | `IContentFormatRegistry` 実装。`IEnumerable<IContentParser>` を形式で索引する |
+| `ContentFormatMap` | 拡張子・媒体型 → `ContentFormat` の対応（純粋な値） |
+| `DiagnosticIds` | `LI1xxx`。番号帯の規約自体もここの注記に書いた |
+
+守った制約:
 
 - **1つの形式を複数のパーサーが主張しうる**（`SupportedFormats` が複数持てるため）。
-  **後から登録されたものが勝つ**が、上書きが起きたことを情報レベルで記録する。暗黙に無視しない
+  **後から登録されたものが勝つ**が、上書きが起きたことを情報レベル（`LI1001`）で記録する。暗黙に無視しない
+
+#### 設計上の判断（10.6 で決めたこと）
+
+- **`Diagnostics` を `IContentFormatRegistry` に足した。** 「後が勝つ」という規則は
+  *上書きが記録される*という条件付きで受け入れられるものなので、記録を取り出す口が
+  インターフェイスに無ければその条件を約束できない。ログには書かない
+  （診断は値として扱い、提示は集めた側 = `ISiteBuilder` が決める）
+- **`ContentFormatMap` を別の型に分けた。** 対応表は純粋な値でパーサーの登録（DI の状態）とは
+  寿命が別であり、既定に対する差分を組み立てる操作をテストするのにパーサーが 1 つも要らない。
+  差し替えは `ContentFormatMap` を DI に登録する（`ContentFormatRegistry` の任意引数で受ける）
+- **この表は構成ファイルから束縛しない。** 構成に形式名を書けるようにすると利用者が表記を選ぶことになり、
+  揺れを吸収する義務が生じる。利用者との接触面は拡張子であって形式名ではない
+- **索引はコンストラクターで確定させる**（後から登録を足せない）。可変にすると
+  同じビルドの途中でディスパッチの結果が変わりうることになり、増分計算グラフのノードの値が
+  「いつ引いたか」に依存する
+- **パーサーが 0 個でも例外にしない。** 構成の誤りだが、それを言うべきなのはコンテンツを読もうとした時点であり、
+  索引を組み立てた時点ではない（`clean` のようにパースを要しない操作もある）
+- **拡張子の比較は大文字小文字を区別しない。** `ContentPath` が区別するのは出力 URL が区別するからだが、
+  拡張子は `.html` に置き換えられて消えるので、ここで区別しなくても環境で出力が変わることはない。
+  区別すると Windows で `.MD` になったファイルが黙ってコンテンツでなくなる
+- **`TryGetFormatByMediaType` は敢えてインターフェイスに載せず、実装側の公開メソッドに留めた。**
+  拡張子を持たないリモート コンテンツのために要る（9.5 の帰結）が、媒体型を運ぶ手段
+  （`ContentSourceResult` に添えるか `ContentSource` が持つか）が未決である。決まるまで抽象を広げない
+- **`ContentFormatRegistry` は `UseLithify()` が既定で登録する。** 「既定で何も登録しない」方針の例外だが、
+  この型は特定のパーサーを知らないので建前は崩れない。むしろ各パーサー パッケージが自分で登録すると、
+  登録順に依存する優先順が誰の責務か曖昧になる
+- **診断 ID の番号帯を決めた。** `LI` + 4 桁で上位 1 桁がパッケージ
+  （`LI0` 抽象 / `LI1` Core / `LI2` Hosting / `LI3` パーサー / `LI4` レンダラー /
+  `LI5` テンプレート / `LI6` Blog / `LI7` ソース プロバイダ）。
+  中央の一覧を持つとパッケージの追加が `Lithify.Abstractions` の改版を要求し、
+  「パーサーは誰でも追加できる」という建前と矛盾する。`DiagnosticIds` を `internal` にしているのは
+  抑制の機構（`NoWarn` 相当）がまだ無いためで、利用者にとっての契約はログに出る文字列そのものである
+
+#### 差分（他の場所に及んだ変更）
+
+- **`Diagnostic` にパスを取らないコンストラクターを追加した。** 構成の誤りのように
+  *コンテンツを 1 つも読まずに決まる*診断のためで、パスが分かるのに省略するためのものではない
+- 同一インスタンスが二度列挙された場合は上書きとして扱わない（DI の二重登録であり、
+  利用者が対処すべきことは何もない）。空の形式を主張したパーサーは索引に入れず `LI1002` で警告する
+  （入れると「`default` の形式を扱えるパーサー」が生まれ、拡張子の対応が無い入力に黙って引っかかる）
 
 ## 11. `Lithify.Highlighting.TextMate`
 

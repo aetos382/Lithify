@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -120,6 +121,25 @@ public interface IContentResolver
 public interface IContentFormatRegistry
 {
     /// <summary>
+    /// 対応を組み立てる過程で報告された診断を取得する。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="TryGetParser"/> の「後から登録されたものが勝つ」という規則は、
+    /// <em>上書きが起きたことが記録される</em>という条件付きで受け入れられるものである。
+    /// 記録を取り出す口がこの型に無ければ、その条件は約束できない。
+    /// </para>
+    /// <para>
+    /// ここに入るのはビルドの開始前、登録の集約時に決まる診断である。
+    /// コンテンツを 1 つも読まずに判るので <see cref="ContentPath"/> は持たない。
+    /// ビルドの結果に載せるのは呼び出し側（<c>ISiteBuilder</c>）の責務であり、
+    /// この型はログにも書かない（診断は値として扱い、提示の仕方は
+    /// <see cref="Diagnostic"/> を集めた側が決める）。
+    /// </para>
+    /// </remarks>
+    ImmutableArray<Diagnostic> Diagnostics { get; }
+
+    /// <summary>
     /// パスの拡張子からコンテンツ形式を得る。
     /// </summary>
     /// <param name="path">コンテンツのパス。</param>
@@ -138,7 +158,8 @@ public interface IContentFormatRegistry
     /// <remarks>
     /// 同じ形式を複数のパーサーが主張した場合、<em>後から登録されたものが勝つ</em>
     /// （明示的な差し替えを可能にするため）。ただし上書きが起きたことは
-    /// <see cref="DiagnosticSeverity.Information"/> で記録され、暗黙に無視されない。
+    /// <see cref="DiagnosticSeverity.Information"/> の <see cref="Diagnostics"/> として記録され、
+    /// 暗黙に無視されない。
     /// </remarks>
     bool TryGetParser(
         ContentFormat format,

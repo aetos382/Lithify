@@ -1,5 +1,8 @@
 using System;
 
+using Lithify.Abstractions;
+using Lithify.Core.Content;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -34,6 +37,12 @@ public static class LithifyHostApplicationBuilderExtensions
     /// 既定で何かを登録すると「差し替え可能」という建前が崩れる。
     /// </para>
     /// <para>
+    /// ただし<em>登録されたパーサーを索引する側</em>（<see cref="IContentFormatRegistry"/>）は
+    /// 既定で登録する。特定のパーサーを知らないので建前は崩れず、
+    /// 登録順が優先順になるという規則の持ち主が 1 箇所に定まる。
+    /// 拡張子の対応表を変えるには <see cref="ContentFormatMap"/> を DI に登録する。
+    /// </para>
+    /// <para>
     /// <c>Lithify</c> セクションから <see cref="LithifyOptions"/> を束縛する。
     /// コマンドライン引数による上書きは <c>RunLithifyAsync()</c> の中で
     /// <see cref="IPostConfigureOptions{TOptions}"/> として適用される。
@@ -56,6 +65,15 @@ public static class LithifyHostApplicationBuilderExtensions
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton<IPostConfigureOptions<LithifyOptions>, CommandLineOverrides>(
                 static provider => provider.GetRequiredService<CommandLineOverrides>()));
+
+        // 形式のディスパッチは既定で登録してよい。この型は特定のパーサーを知らず、
+        // 登録された IContentParser を索引するだけなので、「既定で何かを登録すると
+        // 差し替え可能という建前が崩れる」に当たらない。むしろ各パーサー パッケージが
+        // 自分でこれを登録すると、登録順に依存する優先順が誰の責務か曖昧になる。
+        services.TryAddSingleton<IContentFormatRegistry>(
+            static provider => new ContentFormatRegistry(
+                provider.GetServices<IContentParser>(),
+                provider.GetService<ContentFormatMap>()));
 
         // ファクトリーを明示するのは TryAddEnumerable が重複排除に実装型を要るため。
         // 型引数だけの登録にすると実装型が推論できず、登録が例外になる。

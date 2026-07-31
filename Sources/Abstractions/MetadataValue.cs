@@ -60,22 +60,85 @@ public abstract record MetadataValue
     /// 順序を持つ値の並び。<c>tags</c> のような複数値に対応する。
     /// </summary>
     /// <param name="Items">要素。</param>
+    /// <remarks>
+    /// 等価性は要素の内容で決まる（<see cref="ImmutableArray{T}"/> の既定の等価性は
+    /// 配列の参照比較なので、<see cref="Equals(Sequence)"/> で上書きしている）。
+    /// <c>record</c> が値の意味を持つと読める型で参照比較が残ると、
+    /// 同じ内容のメタデータが「違う」と判定される。
+    /// </remarks>
     public sealed record Sequence(ImmutableArray<MetadataValue> Items) : MetadataValue
     {
         /// <inheritdoc />
         public override string Kind =>
             nameof(Sequence);
+
+        /// <summary>
+        /// 要素の内容が等しいかどうかを判定する。
+        /// </summary>
+        /// <param name="other">比較対象。</param>
+        /// <returns>等しい場合は <see langword="true"/>。</returns>
+        public bool Equals(
+            Sequence? other)
+        {
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return other is not null &&
+                this.Items.AsSpan().SequenceEqual(other.Items.AsSpan());
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+
+            foreach (var item in this.Items)
+            {
+                hash.Add(item);
+            }
+
+            return hash.ToHashCode();
+        }
     }
 
     /// <summary>
     /// 入れ子になったキーと値の対応。
     /// </summary>
     /// <param name="Entries">キーと値の対応。</param>
+    /// <remarks>
+    /// <see cref="Sequence"/> と同じ理由で等価性を内容で決める。
+    /// 対応の順序は意味を持たないので、比較も順序に依存しない。
+    /// </remarks>
     public sealed record Mapping(ImmutableDictionary<MetadataKey, MetadataValue> Entries) : MetadataValue
     {
         /// <inheritdoc />
         public override string Kind =>
             nameof(Mapping);
+
+        /// <summary>
+        /// 対応の内容が等しいかどうかを判定する。
+        /// </summary>
+        /// <param name="other">比較対象。</param>
+        /// <returns>等しい場合は <see langword="true"/>。</returns>
+        public bool Equals(
+            Mapping? other)
+        {
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return other is not null &&
+                DictionaryEquality.Equals(this.Entries, other.Entries);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return DictionaryEquality.GetHashCode(this.Entries);
+        }
     }
 
     /// <summary>

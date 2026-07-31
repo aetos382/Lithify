@@ -90,6 +90,27 @@ public sealed record Diagnostic(
     }
 
     /// <summary>
+    /// 対象のコンテンツを持たない診断を生成する。
+    /// </summary>
+    /// <param name="id">診断の識別子。</param>
+    /// <param name="severity">重大度。</param>
+    /// <param name="message">利用者に提示する本文。</param>
+    /// <remarks>
+    /// 構成の誤り（同じ形式を扱うパーサーが複数登録された等）のように、
+    /// <em>コンテンツを 1 つも読まずに決まる</em>診断に用いる。
+    /// パスが分かるのに省略するためのものではない。
+    /// 対象を特定できるなら常に渡すべきで、渡さなければ利用者は
+    /// どのファイルの話かを知る手立てがない。
+    /// </remarks>
+    public Diagnostic(
+        string id,
+        DiagnosticSeverity severity,
+        string message)
+        : this(id, severity, message, default, default)
+    {
+    }
+
+    /// <summary>
     /// この診断がビルドを中止させるかどうかを示す値を取得する。
     /// </summary>
     public bool IsError =>

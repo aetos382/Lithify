@@ -20,4 +20,16 @@
     <value>The output store root '{0}' must be an absolute path.</value>
     <comment>ArgumentException thrown when FileSystemOutputStore is constructed with a relative root path.</comment>
   </data>
+  <data name="ContentFormatMustNotBeEmpty" xml:space="preserve">
+    <value>A content format mapping must not target the default (empty) content format.</value>
+    <comment>ArgumentException thrown when a default ContentFormat is passed to ContentFormatMap.WithExtension or WithMediaType.</comment>
+  </data>
+  <data name="ParserOverridden" xml:space="preserve">
+    <value>The parser '{1}' now handles the content format '{0}', replacing '{2}'.</value>
+    <comment>Information diagnostic LI1001. {0} is the format name, {1} the winning parser type, {2} the replaced parser type.</comment>
+  </data>
+  <data name="ParserDeclaredEmptyFormat" xml:space="preserve">
+    <value>The parser '{0}' declares support for the default (empty) content format, which is ignored.</value>
+    <comment>Warning diagnostic LI1002. {0} is the parser type name.</comment>
+  </data>
 </root>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FrontMatterNotWellFormed" xml:space="preserve">
+    <value>YAML フロント マターを解析できませんでした: {0}</value>
+    <comment>Warning diagnostic LI3101. {0} is the message from the YAML parser.</comment>
+  </data>
+  <data name="FrontMatterNotMapping" xml:space="preserve">
+    <value>YAML フロント マターはキーと値の対応でなければなりませんが、{0} でした。メタデータは読み取られていません。</value>
+    <comment>Warning diagnostic LI3102. {0} is the YAML node type (Sequence / Scalar).</comment>
+  </data>
+  <data name="FrontMatterKeyNotScalar" xml:space="preserve">
+    <value>YAML フロント マターのキーが文字列ではなく {0} なので、この項目は読み飛ばされました。</value>
+    <comment>Warning diagnostic LI3103. {0} is the YAML node type of the key.</comment>
+  </data>
+  <data name="FrontMatterDuplicateKey" xml:space="preserve">
+    <value>フロント マターのキー '{0}' と '{1}' はどちらも '{2}' に正規化されます。後のものが優先されます。</value>
+    <comment>Warning diagnostic LI3104. {0} is the earlier raw key, {1} the later raw key, {2} the normalized key.</comment>
+  </data>
+  <data name="FrontMatterEmptyKey" xml:space="preserve">
+    <value>YAML フロント マターのキーが空なので、この項目は読み飛ばされました。</value>
+    <comment>Warning diagnostic LI3105.</comment>
+  </data>
+  <data name="FrontMatterRecursiveAlias" xml:space="preserve">
+    <value>フロント マターの項目 '{0}' が YAML のアンカーによって自身を参照しているため、値を空のものに置き換えました。</value>
+    <comment>Warning diagnostic LI3106. {0} is the normalized key whose value contains the cycle.</comment>
+  </data>
+  <data name="WellKnownKeyAmbiguous" xml:space="preserve">
+    <value>'{0}' と '{1}' はどちらも '{2}' を供給できます。'{0}' が採用され、'{1}' はそれ自身の名前でのみ読めます。</value>
+    <comment>Warning diagnostic LI3107. {0} is the winning alias, {1} the ignored alias, {2} the well-known key.</comment>
+  </data>
+  <data name="SourceFormatOverwritten" xml:space="preserve">
+    <value>'{0}' に '{1}' と書かれていますが、このコンテンツは '{2}' として解析されるため、値を置き換えました。このキーはパーサーが扱った形式を記録するものであり、フロント マターからは設定できません。</value>
+    <comment>Information diagnostic LI3108. {0} is the key name, {1} the declared value, {2} the actual format.</comment>
+  </data>
+  <data name="LinkTargetNotResolvable" xml:space="preserve">
+    <value>リンク先 '{0}' を URI ともサイト内のパスとも解釈できなかったため、書かれたまま保持しました。</value>
+    <comment>Warning diagnostic LI3120. {0} is the link target as written in the source.</comment>
+  </data>
+  <data name="BlockNotRepresentable" xml:space="preserve">
+    <value>{0} ブロックには共通 AST に対応するものがないため、このブロック自身の構造は失われました。</value>
+    <comment>Warning diagnostic LI3121. {0} is the Markdig block type name.</comment>
+  </data>
+</root>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FrontMatterNotWellFormed" xml:space="preserve">
+    <value>The YAML front matter could not be parsed: {0}</value>
+    <comment>Warning diagnostic LI3101. {0} is the message from the YAML parser.</comment>
+  </data>
+  <data name="FrontMatterNotMapping" xml:space="preserve">
+    <value>The YAML front matter must be a mapping of keys to values, but it is a {0}. No metadata was read from it.</value>
+    <comment>Warning diagnostic LI3102. {0} is the YAML node type (Sequence / Scalar).</comment>
+  </data>
+  <data name="FrontMatterKeyNotScalar" xml:space="preserve">
+    <value>A YAML front matter key is a {0} rather than a plain string, so the entry was skipped.</value>
+    <comment>Warning diagnostic LI3103. {0} is the YAML node type of the key.</comment>
+  </data>
+  <data name="FrontMatterDuplicateKey" xml:space="preserve">
+    <value>The front matter keys '{0}' and '{1}' both normalize to '{2}'; the later one wins.</value>
+    <comment>Warning diagnostic LI3104. {0} is the earlier raw key, {1} the later raw key, {2} the normalized key.</comment>
+  </data>
+  <data name="FrontMatterEmptyKey" xml:space="preserve">
+    <value>A YAML front matter key is empty, so the entry was skipped.</value>
+    <comment>Warning diagnostic LI3105.</comment>
+  </data>
+  <data name="FrontMatterRecursiveAlias" xml:space="preserve">
+    <value>The front matter entry '{0}' refers to itself through a YAML anchor, so the value was replaced with an empty one.</value>
+    <comment>Warning diagnostic LI3106. {0} is the normalized key whose value contains the cycle.</comment>
+  </data>
+  <data name="WellKnownKeyAmbiguous" xml:space="preserve">
+    <value>Both '{0}' and '{1}' can supply '{2}'; '{0}' wins and '{1}' is used only under its own name.</value>
+    <comment>Warning diagnostic LI3107. {0} is the winning alias, {1} the ignored alias, {2} the well-known key.</comment>
+  </data>
+  <data name="SourceFormatOverwritten" xml:space="preserve">
+    <value>'{0}' was written as '{1}', but this content is parsed as '{2}', so the value was replaced. This key records the format the parser handled and cannot be set from the front matter.</value>
+    <comment>Information diagnostic LI3108. {0} is the key name, {1} the declared value, {2} the actual format.</comment>
+  </data>
+  <data name="LinkTargetNotResolvable" xml:space="preserve">
+    <value>The link target '{0}' could not be interpreted as a URI or as a path within the site, so it was left as written.</value>
+    <comment>Warning diagnostic LI3120. {0} is the link target as written in the source.</comment>
+  </data>
+  <data name="BlockNotRepresentable" xml:space="preserve">
+    <value>A {0} block has no equivalent in the common AST, so its own structure was dropped.</value>
+    <comment>Warning diagnostic LI3121. {0} is the Markdig block type name.</comment>
+  </data>
+</root>

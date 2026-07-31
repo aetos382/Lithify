@@ -20,4 +20,16 @@
     <value>出力ストアのルート '{0}' は絶対パスでなければなりません。</value>
     <comment>ArgumentException thrown when FileSystemOutputStore is constructed with a relative root path.</comment>
   </data>
+  <data name="ContentFormatMustNotBeEmpty" xml:space="preserve">
+    <value>コンテンツ形式の対応先を既定 (空) のコンテンツ形式にすることはできません。</value>
+    <comment>ArgumentException thrown when a default ContentFormat is passed to ContentFormatMap.WithExtension or WithMediaType.</comment>
+  </data>
+  <data name="ParserOverridden" xml:space="preserve">
+    <value>コンテンツ形式 '{0}' はパーサー '{1}' が扱うようになり、'{2}' を置き換えました。</value>
+    <comment>Information diagnostic LI1001. {0} is the format name, {1} the winning parser type, {2} the replaced parser type.</comment>
+  </data>
+  <data name="ParserDeclaredEmptyFormat" xml:space="preserve">
+    <value>パーサー '{0}' は既定 (空) のコンテンツ形式を扱えると主張していますが、これは無視されます。</value>
+    <comment>Warning diagnostic LI1002. {0} is the parser type name.</comment>
+  </data>
 </root>

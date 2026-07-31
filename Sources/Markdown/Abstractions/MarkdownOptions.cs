@@ -63,4 +63,22 @@ public sealed class MarkdownOptions
     /// 既定は無効（仕様どおり単一の改行は空白になる）。
     /// </remarks>
     public bool HardLineBreaks { get; set; }
+
+    /// <summary>
+    /// 属性記法（<c>## 見出し {#anchor}</c>）を有効にするかどうかを取得または設定する。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 既定は無効。<see cref="Footnotes"/> と同じく CommonMark にも GFM にも含まれない拡張であり、
+    /// 記法が実装によって異なる（Pandoc の <c>{#id}</c> と kramdown の <c>{: #id}</c>）。
+    /// </para>
+    /// <para>
+    /// <strong>これが無効の間、Markdown の見出しは明示的なアンカーを持てない。</strong>
+    /// <c>{#anchor}</c> は見出しの文字列の一部として読まれ、
+    /// <see cref="Lithify.Abstractions.Ast.SectionNode.AnchorId"/> は
+    /// 常に <see langword="null"/> になる（アンカーはレンダラーが見出し文字列から生成する）。
+    /// AsciiDoc の <c>[[id]]</c> に相当するものを Markdown で書きたい場合に有効にする。
+    /// </para>
+    /// </remarks>
+    public bool Attributes { get; set; }
 }
