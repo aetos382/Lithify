@@ -724,7 +724,7 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
 | `MarkdigOptions` | エンジン固有の設定（`MaximumNestingDepth` / `AutoIdentifiers` / `AllowFrontMatterInMiddleOfDocument`） |
 | `FrontMatterScanner` | 文書先頭の YAML の範囲を切り出す軽量パス |
 | `FrontMatterReader` | YAML → `DocumentMetadata`（YamlDotNet はここだけ） |
-| `MarkdownAliasDefaults` | Markdown の別名の既定（`lastmod` / `summary` 等）。写しの**規則**は `Lithify.Core` にある |
+| `MarkdownAliasDefaults` | Markdown の別名の既定（後に空になった。下項）。写しの**規則**は `Lithify.Core` にある |
 | `MarkdigBlockMapper` / `MarkdigInlineMapper` / `MarkdigLinkTargetMapper` / `MarkdigMappingContext` | Markdig AST → 共通 AST |
 | `DiagnosticIds` / `Resources/Messages{,.ja}.resx` | `LI31xx` の診断 |
 
@@ -746,31 +746,32 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
   メタデータを読む部分は両経路で `ReadMetadata` を共有しており、一致がコードの重複に依存しない
 - **フロント マター由来の誤りは全て診断で、例外にしない**（`LI3101`–`LI3106`）。
   1 記事の YAML の誤りでサイト全体のビルドが止まるほうが害が大きい
-- **ネイティブ名の別名は「既存ジェネレーターが広く使うもの」だけ写す。**
+- ~~**ネイティブ名の別名は「既存ジェネレーターが広く使うもの」だけ写す。**
   `lastmod` / `last_modified_at` / `updated` → `last-modified`、`summary` / `excerpt` → `description`、
-  `authors` → `author`、`language` → `lang`、`template` → `layout`。
-  意味がずれるもの（Jekyll の `published` は `draft` の否定、Hugo の `categories` は `tags` と別軸）は写さない。
-  推測で写すと書いた覚えのない値が効く
+  `authors` → `author`、`language` → `lang`、`template` → `layout`~~ — **撤回した**（下の「語彙の互換は追わない」）。
+  なお意味がずれるもの（Jekyll の `published` は `draft` の否定、Hugo の `categories` は `tags` と別軸）は、
+  綴りの互換を追う方針であっても写せなかった。推測で写すと書いた覚えのない値が効く
 - **これらは仕様ではなく慣行の借用である。** Markdown のフロント マターには仕様が定めたネイティブ名が
   存在しない（フロント マター自体が CommonMark 仕様外の拡張である）。AsciiDoc の `doctitle` / `revdate` が
   「その形式ではそう書く」という**事実**であるのに対し、こちらは既存ジェネレーターの綴りを借りただけ。
-  **綴りが衝突したら AsciiDoc が勝つ**（Lithify は Hugo を踏襲すると決めていない。慣行が仕様に勝つ理由は無い）
-- **別名が競合したら候補の並びで先のものが勝ち、`LI1003` で警告する。**
-  並び順そのものが優先順の宣言である（`lastmod` → `last_modified_at` → `updated` の順は
-  Hugo の綴りを優先するという判断）。フロント マターに書かれた順で決めるという選択肢もあるが、
-  それだと「YAML のキーを並べ替えたら効く値が変わる」ことになり、
+  **綴りが衝突したら AsciiDoc が勝つ**（Lithify は Hugo を踏襲すると決めていない。慣行が仕様に勝つ理由は無い）。
+  なお**この慣行の借用そのものを後に撤回した**（下の「語彙の互換は追わない」）
+- **別名が競合したら候補の並びで先のものが勝つ。** 並び順そのものが優先順の宣言である。
+  フロント マターに書かれた順で決めるという選択肢もあるが、それだと
+  「YAML のキーを並べ替えたら効く値が変わる」ことになり、
   フロント マターがキーの順序に意味を持たないことと矛盾する。
-  写し先が明示的に書かれている場合は写さない（書いたものが別名に負けてはならない）
+  写し先が明示的に書かれている場合は写さない（書いたものが別名に負けてはならない）。
+  **競合は診断しない**（下の「診断は結果が誤るものに限る」）
 - **`source-format` はパーサーが上書きする**（出所は `FromPath`、拡張子由来で内容には書かれていない）。
   `.md` に `source-format: asciidoc` と書かれていても事実に反し、混在サイト（R1）で
-  テンプレートがこれを見て表示を変える用途では原因を追えなくなる。黙って置き換えないよう `LI1004`（Information）で記録。
+  テンプレートがこれを見て表示を変える用途では原因を追えなくなる。
   このキーは別名の表を通さない（写しではなくパーサーが知っている事実の記録である）
 - **見出しの平坦な列 → `SectionNode` の木の組み立てはこのパーサーの責務。**
   レベルが飛んでいても（`h1` の次が `h3`）成立し、**最初の見出しより前のブロックはどの節にも属さない**
   （前書きを最初の節に押し込むと目次と本文の対応が崩れる）。スタックで組み立て、深さは `SectionNode.MaxLevel` で抑えられる
 - **リンクの分類だけを行い、解決はしない**（`MarkdigLinkTargetMapper`）。パーサーはサイト全体を知らないので、
   「サイト ルートの外」と「まだ書いていないページ」を区別できない。解決できないものは
-  `LinkTarget.Unresolved` にして `LI3120` で警告する
+  `LinkTarget.Unresolved` にして `LI3107` で警告する
 - **char → UTF-8 の境界を動かさない。** メタデータの読み取りは文字列のままで、
   `FrontMatterScanner.FrontMatter` は `ref struct` で `ReadOnlySpan<char>` を運ぶ
   （切り出した時点で文字列を作ると軽量パスが必ず 1 回の割り当てを払う）
@@ -786,11 +787,8 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
   「軽量パスと完全パースの結果が一致する」という 10.1 の契約が等価性では表現できない状態だった。
   辞書の列挙順は内部の木の形（挿入順）で変わりうるので、比較もハッシュも順序に依存しない
   （`Sources/Abstractions/DictionaryEquality.cs`）
-- 追加した診断: `LI3120`（リンク先を解決できない）、`LI3121`（ブロックを共通 AST に写せない）、
-  および `Lithify.Core` 側に `LI1003`（別名の競合）と `LI1004`（`source-format` の上書き）
+- 追加した診断: `LI3107`（リンク先を解決できない）、`LI3108`（ブロックを共通 AST に写せない）
 - **別名の写しを `Lithify.Core` に移し、利用者が設定できるようにした。**（下項）
-  それに伴い `LI3107` / `LI3108` は**欠番**になった。番号は再利用しない
-  （識別子は抑制の鍵として使われる前提の契約であり、別の意味で復活すると古い抑制が意図しないものを消す）
 
 #### 別名の設定（10.1 の後に加えた設計）
 
@@ -798,7 +796,7 @@ Lithify がパイプラインに取り込む場合（バンドル、指紋付き
 
 | 置き場 | 内容 |
 |---|---|
-| `Lithify.Core.Metadata.WellKnownMetadataMapper` | 規則。明示的に書かれた値は別名に負けない / 先の候補が勝つ / 競合を診断する |
+| `Lithify.Core.Metadata.WellKnownMetadataMapper` | 規則。明示的に書かれた値は別名に負けない / 先の候補が勝つ |
 | `Lithify.Core.Metadata.MetadataAliasTable` | 「写し先 → 候補列」の不変な表 |
 | `Lithify.Core.Metadata.MetadataAliasOptions` | 利用者の設定。`ConfigureMetadataAliases()` で書く |
 | `Lithify.Parsers.Markdig.MarkdownAliasDefaults` | Markdown の既定の語彙（このパッケージ内） |
@@ -840,6 +838,72 @@ builder.ConfigureMetadataAliases(a =>
 - **設定は構成ファイルから束縛しない。** 候補の並びは優先順という意味を持ち、
   空の並び（写しを止める）と未設定（既定のまま）を区別する必要がある。構成の束縛はどちらも表現できない。
   R5 のとおりサイトは C# で構成する
+
+#### 語彙の互換は追わない、機能の互換は基本的に潰す
+
+10.1 は「既存ジェネレーターが広く使う綴りを別名として受ける」という方針で
+`lastmod` / `summary` / `authors` / `language` / `template` を写していた。**これを撤回する。**
+2 つの互換を分けて考えると、それぞれ別の結論になる。
+
+- **語彙の互換（他のジェネレーターの綴りを受ける）は追わない。**
+  frontmatter は Markdown の仕様外の拡張であり、ブログ用メタデータ語彙として
+  標準化された仕様は存在しない。**標準があれば従うが、無いものに慣行で追随する理由が無い。**
+  Hugo からシステムだけ乗り換えてコンテンツをそのまま使えることは目標にしない。
+  Lithify では `last-modified` と書く
+- **機能の互換（「Hugo/AsciiDoctor ではできたあれが Lithify ではできない」）は基本的に潰す。**
+  「絶対潰す」ではなく個別に検討する。判定は 3 つ:
+  ① Lithify の不変条件と衝突しないか（例: Asciidoctor の `@` 修飾子による hard-set は
+  「近い方が勝つ」の一言の規則を二段にし、`WithFallback` が出所を解釈しないという決定に触るので採らない）、
+  ② 既にある機構で表せないか（例: サイト側の値を強制したいなら層に段を足すのではなく
+  `siteOverrides.WithFallback(doc)` と順序を逆にすればよい）、
+  ③ 出力形式に依存しないか（例: `<head><title>` 専用の well-known キーは HTML に縛るので
+  `WellKnownMetadata` の資格を満たさない。`Entries` のネイティブ綴りを直接読む経路が
+  既にエスケープハッチである）
+- **`WellKnownMetadata` の綴りを Lithify 自身の事情で変えたくなった場合に備えて、優先順の機構は残す。**
+  過去に書かれたファイルを全て更新させないためである。**旧綴りは新綴りより後ろの候補として残すだけで、
+  「変えてください」という移行の警告は出さない**（変えなくてよいように優先順があるのだから、
+  変えろと言うなら優先順を設けた意味が無い）
+- **`MetadataAliasOptions` は残す。** 語彙互換を追わない決定は Lithify が既定で何を受けるかの話であり、
+  利用者が自分の横断語彙を作れること（`a[MetadataKey.Create("meta-title")] = ["title"]`）は
+  機能互換の側にある
+
+#### 診断は結果が誤るものに限る
+
+**「エラーではない、親切のための診断」を MVP では出さない。** 落としたのは 3 件:
+
+| 識別子 | 内容 | 落とす理由 |
+|---|---|---|
+| 旧 `LI1001` `ParserOverridden` | 同じ形式のパーサーが後の登録に置き換わった | 差し替えは意図された操作である。上書きが起きるのが正しい |
+| 旧 `LI1003` `WellKnownKeyAmbiguous` | 複数の候補が同じ写し先に写せた | 候補列に優先順が宣言されており、結果は決まっている |
+| 旧 `LI1004` `SourceFormatOverwritten` | 内容の `source-format` をパーサーが上書きした | 上書き後の値が事実である。書かれていた値は事実に反していた |
+
+判定基準は **「これが出たとき、直さなくても結果は正しいか」**。正しいなら出さない。
+残る 9 件（`LI1001` `ParserDeclaredEmptyFormat`、`LI3101`–`LI3106` のフロント マター、
+`LI3107` / `LI3108`）はいずれも**情報が失われている**か**主張が実行されない**ものである。
+
+- **MVP をシンプルにするための決定であって、この種の診断を今後絶対に追加しないという決定ではない。**
+  要求が出た時点で足す
+- **抑制の機構（MSBuild の `NoWarn` 相当）が無く利用者もいない間は、番号を詰め直してよい。**
+  番号が契約になるのは抑制の鍵として参照できるようになった時点であり、それまでは
+  保護すべき既存の抑制が無い。この整理で `ParserDeclaredEmptyFormat` は `LI1002` → `LI1001`、
+  Markdig 側は `LI3120` / `LI3121` → `LI3107` / `LI3108` に詰めた。
+  **機構を入れるか `DiagnosticIds` を公開した時点から、以後の番号は固定される**
+- 帰結として `WellKnownMetadataMapper.Map` の署名から `path` と `diagnostics` が消えた。
+  この関数は**診断を一切出さない純粋な写しになった**
+
+#### 別名の表に恒等写像を明示する
+
+`title` / `date` のようにネイティブ名が well-known キーと一致するものは、これまで表に載せていなかった
+（正規化の時点で一致するので `Declared` のまま残る）。**これを表に明示する。**
+
+- **表を読めばその形式の語彙の全体が分かる。** 載っていない写し先は「一致するから省いた」のか
+  「その形式には対応物が無い」のかが、表からは区別できなかった
+- **恒等写像も普通の候補として扱う。** 表の外に置いて暗黙に最後の候補として付けることはしない。
+  それは「暗黙の特別扱い」を候補列の末尾に移しただけである
+- 代償: `MetadataAliasOptions` は写し先ごとの**置き換え**なので、利用者が `a.Title = ["headline"]` と
+  書くと `title` の恒等写像も消え、`title:` と書いても `Title` に入らなくなる。
+  戻したければ `["headline", MetadataAliasCandidate.Defaults]` と書く。
+  これは置き換えという演算の正しい帰結であり、例外を作らない
 
 #### 実測した Markdig 1.3.2 の挙動
 
@@ -886,17 +950,15 @@ builder.ConfigureMetadataAliases(a =>
   **こちらは仕様が定めた事実であり、Markdown 側の慣行の借用とは資格が違う**
 - **文書タイトルの解決順は仕様が定めている**（[Asciidoctor: Document Title](https://docs.asciidoctor.org/asciidoc/latest/document/title/) を確認済み）:
   レベル 0 見出し → `:doctitle:`（明示代入）→ `:title:`（フォールバック）。
-  レベル 0 見出しは**自動的に `doctitle` 属性に代入される**ので、候補列に「レベル 0 見出し」を
-  並べる必要はなく、`AsciiDocAliasDefaults` に `["doctitle", "title"]` と書けば仕様の順になる
+  レベル 0 見出しは仕様上**自動的に `doctitle` 属性に代入される**
 - **`:title:` は 2 つの役を持つ。** HTML の `<head><title>` の値であり、**かつ**
   文書タイトルの最後の手段である。AsciiDoc は「文書タイトル」と「`<head>` のタイトル」を
-  別の概念として持つが、**`WellKnownMetadata` には後者に対応するキーが無い**
-- **未決: 写し先 `title` と AsciiDoc のネイティブ属性 `:title:` の綴りが衝突している。**
-  今のコードでは `["doctitle", "title"]` という宣言が効かず、`:title:` がある文書で
-  `doctitle` が写される前に弾かれる（仕様の逆）。
-  **10.2 の着手前に決める。** 案と材料は [open-questions.md](open-questions.md) の項目 1
+  別の概念として持つが、`WellKnownMetadata` には後者に対応するキーが無い
+
+- **写し先 `title` と `:title:` の綴りの衝突は、候補列に `:title:` を入れないことで解く**
+  （下の「`Title` と `:title:` の衝突」）
 - `:!toc:` 形式は `MetadataValue.Flag(false)` になる。YAML は不要
-- `doctitle` は本文のレベル 0 見出しから来るので、出所は `MetadataProvenance.Derived(見出しの位置)`。
+- 出所は `doctitle` が本文のレベル 0 見出しから来るなら `MetadataProvenance.Derived(見出しの位置)`、
   `:doctitle:` の明示代入は `Declared`、`revdate` → `date` は `Mapped`。
   `Declared` と `Derived` の区別があると「題名を直すには見出しを直す」ことが診断で示せる
 - **Asciidoctor の `SafeMode` は `AsciiDoc.Abstractions` に入れない。** 必要なら
@@ -911,6 +973,81 @@ builder.ConfigureMetadataAliases(a =>
 - **include の解決は `IContentResolver` に委ねる。** AdocNet に独自のファイル読み取りをさせない。
   ステップ 9 で `ContentPath` がリモートを表せるようになるので、
   エンジン側から見れば「ローカルかリモートか」は区別が付かず、区別する必要もない
+
+#### `Title` と `:title:` の衝突（決定済み）
+
+写し先 `title` と AsciiDoc のネイティブ属性 `:title:` の綴りが衝突する。
+`["doctitle", "title"]` と宣言しても `:title:` がある文書では
+写し先が既に埋まっているとみなされて `doctitle` が写らず、仕様の逆になる。
+
+**`AsciiDocAliasDefaults` の候補列を `[doctitle]` だけにする。`:title:` を候補列に入れない。**
+
+- **`Lithify.Core` のコードは 1 行も変えない。** 写しの規則（写し先が書かれていれば写さない）は無傷
+- **情報は失われない。** `:title:` は `Entries["title"]` にネイティブ綴りのまま残る。
+  `<head><title>` を `:title:` で指定したいテンプレートはそれを直接読む。
+  この経路が**エスケープハッチである**（`WellKnownMetadata` を通さずネイティブ綴りを読む）
+- **Asciidoctor の `<head><title>` と結果が一致する。** 4 通りで検算済み:
+
+  | 文書 | Asciidoctor の `<head><title>` | Lithify の `Title` |
+  |---|---|---|
+  | `= Hello` | `Hello` | `Hello`（`doctitle` から） |
+  | `:title: Y` のみ | `Y` | `Y`（`title` が直接書かれている） |
+  | `= Hello` + `:title: Y` | `Y` | `Y`（同上。`doctitle` は写らない） |
+  | `:doctitle: X` のみ | `X` | `X`（`doctitle` から） |
+
+  3 行目が仕様どおりであることは書いた人に自明ではないが、**それは Asciidoctor の挙動そのものである。**
+  仕様に従った結果に情報診断を出すなら `revdate` → `date` の写しにも出さなければ筋が通らない
+- **`MetaTitle` のような `<head><title>` 専用の well-known キーは足さない。**
+  形式を跨がない（Markdown に対応物が無い）し、出力形式に縛る。
+  `WellKnownMetadata` は出力形式に依らない語彙である
+- **`WellKnownMetadata.Title` の綴りは変えない。** `title` と書くのが自然であり、
+  世界中が `title` と書くものに別の綴りを当てる代償のほうが大きい
+
+#### AdocNet が仕様に準拠していない部分は対応しない
+
+**AsciiDoc 言語仕様に規定があっても AdocNet が実装していないものは、Lithify 側で補わない。**
+将来 AdocNet より高機能な標準準拠パーサーが出れば（無ければ作れば）済むことであり、
+エンジンの欠落をパーサー アダプターで埋めると、その埋め方が Lithify の仕様として固定される。
+
+ただし **「エンジンが持っていない情報」と「エンジンが別の形で持っている情報」は別扱い**である。
+後者を写すのは 10.2 の本体作業であって、欠落の補填ではない。
+
+| 種別 | 例 | 扱い |
+|---|---|---|
+| 持っていない | 属性参照 `{doctitle}` の展開 | 対応しない |
+| 持っていない | ヘッダー境界の判定 | 対応しない |
+| 形が違う | レベル 0 見出しが `Attributes["doctitle"]` ではなく `Document.Title` にある | **写す**（10.2 の作業） |
+
+#### 実測した AdocNet 1.0.22 の挙動
+
+写しの設計はこれらに依存しているので、AdocNet を更新したら確かめ直す。
+`Document.Title` と `Document.Attributes` の両方を見る必要がある。
+
+- `= Hello` → `Title = "Hello"`。`Attributes` に **`doctitle` は入らない**
+  （仕様が定める「レベル 0 見出しは自動的に `doctitle` に代入される」を実装していない）。
+  したがって `[doctitle]` の候補列だけでは見出し由来のタイトルが取れず、
+  **`Document.Title` を `doctitle` として自分で足す必要がある**
+- `:doctitle: X` → `Title = null`、`Attributes["doctitle"] = "X"`
+- `= Hello` + `:doctitle: X` → `Title = "Hello"` と `Attributes["doctitle"] = "X"` が併存し、
+  **AdocNet は裁定しない。** どちらを採るかは Lithify が決めることになる
+- **ヘッダー境界を見ていない。** `:title:` の後の見出しも、空行を挟んだ後の見出しも `Title` に入る
+- `== Hello`（レベル 1）→ `Title = null` で `Section` ノードになる
+- `:doctitle!:` で属性は消えるが `Title` は残る
+- **属性参照を展開しない。** `{doctitle}` / `{docdate}` は `ParagraphNode.Text` にリテラルのまま残る
+- **暗黙属性が 43 個入る。** うち `docdate` / `docdatetime` / `doctime` / `docyear` /
+  `localdate` / `localdatetime` / `localtime` / `localyear` の 8 個が**実行時の現在時刻**である
+
+##### 未決: 暗黙属性 43 個をどう扱うか
+
+**`Document.Attributes` をそのまま `MetadataValue` に流すと再現可能ビルドが壊れる**
+（時刻由来の 8 個が毎回変わる）。`Document.Attributes` は宣言（`:name: value`）と
+エンジンが合成した暗黙属性を区別せず、印も持たないので、値を見て弾くことしかできない。
+
+- 候補: 既知の暗黙属性名を除外リストで落とす / 許可リストで宣言相当のものだけ通す /
+  文書のテキストを走査して `:name:` の行があるものだけ通す
+- **項目 2（再現可能ビルドの入力集合）と直結する。** ビルド時刻が入力なのか環境なのかが決まれば、
+  時刻由来の 8 個の扱いも決まる
+- **10.2 の着手時に決める。** [open-questions.md](open-questions.md) を参照
 
 ### 10.3 `Lithify.Renderers.Html`
 
@@ -1081,8 +1218,26 @@ Blazor（アセンブリ内の型）も同じ枠組みに収まる。
   （`WithFallback` は層の数を知らない）。**各層は自分の `MetadataProvenance.FromDefaults(層のパス)` を
   stamp してから重ねる。** そうしないと合成後に「どの層の既定が効いているか」が失われ、
   利用者が値の出どころを追えなくなる。サイト全体の既定値はパスが `default` のルート層として扱う
+- **層の勝敗は「内側が勝つ」の一言で、診断は出さない。**
+  親フォルダの既定 → 子フォルダの既定 → 文書に明示された値の順で、後のものが前のものを覆す。
+  別名の候補列と違って**文書自身に属する事実（置き場所）で決まる**ので、
+  ファイルを見れば勝敗が読める。診断で説明する必要が無い
+- **Asciidoctor の `@` 修飾子（hard-set / soft-set）に相当する機構は入れない。**
+  Asciidoctor は API/CLI から渡した属性を `-a lang=ja`（文書内の代入に勝つ）と
+  `-a lang=ja@`（負ける）で書き分けられるが、これを持ち込むと「近い方が勝つ」の一言が二段になり、
+  `WithFallback` が出所を解釈しないという決定に触る。
+  **サイト側の値を強制したいなら層に段を足すのではなく順序を逆にする**（`siteOverrides.WithFallback(doc)`）。
+  なお Asciidoctor の階層継承そのものは存在しない（言語仕様は 1 文書の記法を定めるもので
+  文書集合の概念を持たない。`.asciidoctorconfig` はエディタ拡張の機構で仕様ではない）
+- **既定値は最終的なキーを直接書く。別名の写しを経ない。** 既定値を書く場所には `ContentFormat` が
+  無いので、どの形式の語彙の表を引くべきかが決まらない。コア語彙のキーを C# で書く
+  （そのための書き味は [open-questions.md](open-questions.md) の項目 3）
 - **既定値の層は増分ビルドの依存として扱う。** `posts/` の既定値の変更は `posts/` 配下の全文書を
   無効化するが、他は無効化しない。層を1つのノードにまとめると1文書の既定値の変更で全ページが落ちる
+- **未決: 任意のタクソノミー。** Hugo は任意の軸（`categories` / `series` / 利用者の定義）を持てるが、
+  Lithify は `WellKnownMetadata.Tags` の 1 軸しか持たない。`WithTags()` が
+  「タグ一覧ページを生やす」ことまで含むので、軸を増やすとページ生成の側も一般化が要る。
+  [open-questions.md](open-questions.md) を参照
 
 ### 10.6 パーサーのディスパッチ — 済
 
@@ -1097,7 +1252,9 @@ Blazor（アセンブリ内の型）も同じ枠組みに収まる。
 守った制約:
 
 - **1つの形式を複数のパーサーが主張しうる**（`SupportedFormats` が複数持てるため）。
-  **後から登録されたものが勝つ**が、上書きが起きたことを情報レベル（`LI1001`）で記録する。暗黙に無視しない
+  **後から登録されたものが勝つ。** 当初はこれを情報レベル（`LI1001`）で記録していたが、
+  差し替えは意図された操作であり上書きが起きるのが正しいので、診断を落とした
+  （10.1 の「診断は結果が誤るものに限る」）
 
 #### 設計上の判断（10.6 で決めたこと）
 
@@ -1129,15 +1286,16 @@ Blazor（アセンブリ内の型）も同じ枠組みに収まる。
   `LI5` テンプレート / `LI6` Blog / `LI7` ソース プロバイダ）。
   中央の一覧を持つとパッケージの追加が `Lithify.Abstractions` の改版を要求し、
   「パーサーは誰でも追加できる」という建前と矛盾する。`DiagnosticIds` を `internal` にしているのは
-  抑制の機構（`NoWarn` 相当）がまだ無いためで、利用者にとっての契約はログに出る文字列そのものである
+  抑制の機構（`NoWarn` 相当）がまだ無いためで、利用者にとっての契約はログに出る文字列そのものである。
+  **その機構が入るまでは番号を詰め直してよい**（保護すべき既存の抑制が無い）
 
 #### 差分（他の場所に及んだ変更）
 
 - **`Diagnostic` にパスを取らないコンストラクターを追加した。** 構成の誤りのように
   *コンテンツを 1 つも読まずに決まる*診断のためで、パスが分かるのに省略するためのものではない
-- 同一インスタンスが二度列挙された場合は上書きとして扱わない（DI の二重登録であり、
-  利用者が対処すべきことは何もない）。空の形式を主張したパーサーは索引に入れず `LI1002` で警告する
-  （入れると「`default` の形式を扱えるパーサー」が生まれ、拡張子の対応が無い入力に黙って引っかかる）
+- 空の形式を主張したパーサーは索引に入れず `LI1001` で警告する
+  （入れると「`default` の形式を扱えるパーサー」が生まれ、拡張子の対応が無い入力に黙って引っかかる）。
+  これが `Lithify.Core` に残る唯一の診断である
 
 ## 11. `Lithify.Highlighting.TextMate`
 

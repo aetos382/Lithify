@@ -28,31 +28,22 @@ namespace Lithify.Core;
 /// 利用者にとっての契約は識別子の文字列そのもの（ログに出る <c>LI1001</c>）であり、
 /// 定数が公開されているかどうかとは別である。
 /// </para>
+/// <para>
+/// <strong>抑制の機構が無く利用者もいない間は、番号を詰め直してよい。</strong> 番号が契約になるのは
+/// 抑制の鍵として参照できるようになった時点であり、それまでは保護すべき既存の抑制が無い。
+/// 機構を入れるか、この型を公開した時点から、以後の番号は固定される。
+/// </para>
+/// <para>
+/// <strong>診断は「出たとき、直さないと結果が誤る」ものに限る。</strong> 規則が宣言されており
+/// その規則どおりに解決されたことを報せる診断（別名の候補が複数書かれている、
+/// パーサーの登録が後のものに置き換わった）は出さない。読み手が何も直さなくても
+/// 結果は正しく、雑音になるだけである。要求が出た時点で足す。
+/// </para>
 /// </remarks>
 internal static class DiagnosticIds
 {
     /// <summary>
-    /// 同じコンテンツ形式を扱うパーサーが複数登録され、後のものが先のものを置き換えた。
-    /// </summary>
-    public const string ParserOverridden = "LI1001";
-
-    /// <summary>
     /// パーサーが <see langword="default"/> のコンテンツ形式を扱えると主張した。
     /// </summary>
-    public const string ParserDeclaredEmptyFormat = "LI1002";
-
-    /// <summary>
-    /// 複数のメタデータ項目が同じ well-known キーに写せた。
-    /// </summary>
-    /// <remarks>
-    /// 写しの規則は <see cref="Lithify.Core.Metadata.WellKnownMetadataMapper"/> に 1 つあるので、
-    /// この診断は形式に依らず同じ識別子で出る。パーサーごとの帯（<c>LI31xx</c> 等）に
-    /// 置くと、同じ原因の同じ警告が形式によって別の識別子になる。
-    /// </remarks>
-    public const string WellKnownKeyAmbiguous = "LI1003";
-
-    /// <summary>
-    /// コンテンツに書かれた <c>source-format</c> をパーサーが上書きした。
-    /// </summary>
-    public const string SourceFormatOverwritten = "LI1004";
+    public const string ParserDeclaredEmptyFormat = "LI1001";
 }

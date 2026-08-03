@@ -12,6 +12,7 @@ namespace Lithify.Parsers.Markdig;
 /// <see langword="internal"/> にしている理由は <c>Lithify.Core</c> 側の同名の型と同じで、
 /// 識別子を<em>抑制の鍵として</em>参照する機構がまだ無いためである。
 /// 利用者にとっての契約はログに出る文字列そのものである。
+/// 同じ理由で、その機構が入るまでは番号を詰め直してよい。
 /// </para>
 /// </remarks>
 internal static class DiagnosticIds
@@ -46,17 +47,10 @@ internal static class DiagnosticIds
     /// </summary>
     public const string FrontMatterRecursiveAlias = "LI3106";
 
-    // LI3107 と LI3108 は欠番である。well-known キーへの写しに関する診断
-    // （候補の競合と source-format の上書き）は Lithify.Core に移り、
-    // LI1003 / LI1004 になった。写しの規則が形式に依らず 1 箇所にあるので、
-    // 同じ原因の同じ警告が形式によって別の識別子になってはならない。
-    // 番号を再利用しないのは、識別子が抑制の鍵として使われる前提の契約であり、
-    // 別の意味で復活すると古い抑制が意図しないものを消すためである。
-
     /// <summary>
     /// リンクの参照先を URI としてもサイト内のパスとしても解釈できなかった。
     /// </summary>
-    public const string LinkTargetNotResolvable = "LI3120";
+    public const string LinkTargetNotResolvable = "LI3107";
 
     /// <summary>
     /// Markdig のブロックを共通 AST に写せなかった。
@@ -65,5 +59,5 @@ internal static class DiagnosticIds
     /// パイプラインを組み立てているのは Lithify 自身なので、通常は起こらない。
     /// 拡張が追加されたときに<em>内容が黙って消えない</em>ようにするための診断である。
     /// </remarks>
-    public const string BlockNotRepresentable = "LI3121";
+    public const string BlockNotRepresentable = "LI3108";
 }

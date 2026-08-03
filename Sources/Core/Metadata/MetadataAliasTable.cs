@@ -118,8 +118,14 @@ public sealed class MetadataAliasTable
     /// </para>
     /// <para>
     /// 同じ別名を 2 度渡した場合は先のものだけが残る。後のものは決して選ばれない死んだ候補になる。
-    /// 写し先と同じ綴りの別名も落とす。写し先が書かれていれば写しは起きないので、
-    /// これも決して選ばれない。
+    /// 写し先と同じ綴りの別名も落とす。
+    /// <see cref="WellKnownMetadataMapper.Map"/> は写し先が書かれていれば写しを行わないので、
+    /// 写し先と同じ綴りの候補は決して選ばれない。
+    /// </para>
+    /// <para>
+    /// 後者を落とすかどうかは、表に恒等写像を明示するかどうかと連動する
+    /// （未決。<c>docs/open-questions.md</c> の項目 1）。明示する方に決めるなら、
+    /// <see cref="WellKnownMetadataMapper.Map"/> 側の分岐と併せて落とすことになる。
     /// </para>
     /// </remarks>
     [Pure]

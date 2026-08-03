@@ -83,23 +83,10 @@ public sealed class ContentFormatRegistry :
                     continue;
                 }
 
-                if (byFormat.TryGetValue(format, out var previous))
-                {
-                    // 同一インスタンスが二度列挙された場合は上書きではない。
-                    // DI に同じシングルトンが二重登録されているだけで、
-                    // 利用者が知って対処すべきことは何もない。
-                    if (!ReferenceEquals(previous, parser))
-                    {
-                        diagnostics.Add(new Diagnostic(
-                            DiagnosticIds.ParserOverridden,
-                            DiagnosticSeverity.Information,
-                            Messages.FormatParserOverridden(
-                                format.Value,
-                                parser.GetType().FullName,
-                                previous.GetType().FullName)));
-                    }
-                }
-
+                // 同じ形式を複数のパーサーが主張した場合は後から登録されたものが勝つ。
+                // 差し替えを可能にするための規則である（利用者は組み込みのパーサーの後に
+                // 自分のものを登録できる）。診断は出さない。上書きは意図された操作であり、
+                // 直さなくても結果は正しい。
                 byFormat[format] = parser;
             }
         }

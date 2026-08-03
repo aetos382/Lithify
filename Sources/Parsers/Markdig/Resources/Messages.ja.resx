@@ -38,10 +38,10 @@
   </data>
   <data name="LinkTargetNotResolvable" xml:space="preserve">
     <value>リンク先 '{0}' を URI ともサイト内のパスとも解釈できなかったため、書かれたまま保持しました。</value>
-    <comment>Warning diagnostic LI3120. {0} is the link target as written in the source.</comment>
+    <comment>Warning diagnostic LI3107. {0} is the link target as written in the source.</comment>
   </data>
   <data name="BlockNotRepresentable" xml:space="preserve">
     <value>{0} ブロックには共通 AST に対応するものがないため、このブロック自身の構造は失われました。</value>
-    <comment>Warning diagnostic LI3121. {0} is the Markdig block type name.</comment>
+    <comment>Warning diagnostic LI3108. {0} is the Markdig block type name.</comment>
   </data>
 </root>

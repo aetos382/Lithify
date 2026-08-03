@@ -4,32 +4,40 @@ using Lithify.Core.Metadata;
 namespace Lithify.Parsers.Markdig;
 
 /// <summary>
-/// Markdown のフロント マターで広く使われている別名の既定。
+/// Markdown のフロント マターについての別名の既定。
 /// </summary>
 /// <remarks>
 /// <para>
-/// <strong>AsciiDoc と違い、これは仕様ではない。</strong> Markdown のフロント マターには
-/// 仕様が定めたネイティブ名が無く（フロント マター自体が仕様外の拡張である）、
-/// ここに並ぶのは既存の静的サイト ジェネレーターが広く使っている綴りにすぎない。
-/// AsciiDoc の <c>doctitle</c> / <c>revdate</c> が「その形式ではそう書く」という事実であるのに対し、
-/// こちらは慣行の借用である。
+/// <strong>空である。</strong> Markdown のフロント マターには仕様が定めたネイティブ名が無く
+/// （フロント マター自体が CommonMark 仕様外の拡張である）、
+/// <see cref="WellKnownMetadata"/> のキーの綴りがそのまま Lithify での正規の綴りになる。
+/// 写すべき「その形式ではそう書く」という事実が存在しない。
 /// </para>
 /// <para>
-/// その違いは<em>利用者が置き換えたとき</em>に表れる。AsciiDoc の既定を置き換えるのは
-/// 仕様が定めた属性を読まないという宣言だが、Markdown の既定を置き換えるのは
-/// 借りてきた慣行を降ろすだけである。
+/// <strong>他のジェネレーターの綴りは受けない。</strong> 当初は <c>lastmod</c> /
+/// <c>last_modified_at</c> / <c>updated</c> / <c>summary</c> / <c>excerpt</c> / <c>authors</c> /
+/// <c>language</c> / <c>template</c> を写していたが、撤回した。
+/// ブログ用のメタデータ語彙として標準化された仕様は存在せず、あれらは
+/// 既存ジェネレーターの慣行を借りただけである。標準があれば従うが、
+/// 無いものに慣行で追随する理由は無い。Lithify では <c>last-modified</c> と書く。
 /// </para>
 /// <para>
-/// <strong>綴りが衝突したら AsciiDoc が勝つ。</strong> Lithify は Hugo を踏襲すると決めていない。
-/// 同じ綴りが両形式で別の意味を持つなら、仕様が定めているほうを採り、
-/// こちらは別の綴りに譲る（<c>WellKnownMetadata</c> のキーの綴り自体を見直す場合もある）。
-/// 慣行の借用が仕様に勝つ理由は無い。
+/// <strong>それでも表が要るのは、<see cref="WellKnownMetadata"/> の綴りを
+/// Lithify 自身の事情で変えたくなった場合のためである。</strong> そのときは新しい綴りを
+/// 写し先にし、旧綴りを候補として並べる。過去に書かれたファイルを全て更新させないための機構であり、
+/// 移行を促す診断は出さない（変えなくてよいように優先順があるのだから、
+/// 変えろと言うなら優先順を設けた意味が無い）。
+/// </para>
+/// <para>
+/// 利用者が自分の横断語彙を作る経路は残っている
+/// （<see cref="MetadataAliasOptions"/>。<c>a.Description = ["abstract"]</c> のように書く）。
+/// これは Lithify が既定で何を受けるかとは別の話である。
 /// </para>
 /// <para>
 /// <strong>意味がずれるものは並べない。</strong> Jekyll の <c>published</c> は
 /// <see cref="WellKnownMetadata.Draft"/> の否定であり、Hugo の <c>categories</c> は
 /// <see cref="WellKnownMetadata.Tags"/> とは別の分類軸である。
-/// 推測で写すと、書いた覚えのない値が効いている状態になる。
+/// 綴りの互換を追う方針であっても、これらは写せなかった。
 /// </para>
 /// </remarks>
 internal static class MarkdownAliasDefaults
@@ -39,21 +47,15 @@ internal static class MarkdownAliasDefaults
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 各写し先の候補は優先順に並ぶ。<c>lastmod</c> を <c>last_modified_at</c> より前に置いているのは
-    /// Hugo の綴りを優先するという判断である。
+    /// 空の表である。<c>title</c> や <c>date</c> のように綴りが well-known キーと一致するものは、
+    /// <see cref="MetadataKey.Create"/> の正規化を経た時点で既に一致しているので写す必要がない
+    /// （<see cref="MetadataProvenance.Declared"/> のまま残る）。
     /// </para>
     /// <para>
-    /// <c>title</c> や <c>date</c> のように綴りが well-known キーと一致するものは並べない。
-    /// <see cref="MetadataKey.Create"/> の正規化を経た時点で既に一致しており、
-    /// 写す必要がないためである（<see cref="MetadataProvenance.Declared"/> のまま残る）。
-    /// キーの正規化は <c>_</c> を <c>-</c> にするので、Jekyll の <c>last_modified_at</c> は
-    /// <c>last-modified-at</c> として一致する。
+    /// <see cref="MetadataAliasTable.Empty"/> をそのまま返さずこのプロパティを設けているのは、
+    /// <see cref="MarkdigContentParser"/> が「このパッケージの既定」を参照する形を保つためである。
+    /// 綴りの変更に伴う旧綴りの候補が生じたとき、変更はここだけで済む。
     /// </para>
     /// </remarks>
-    public static MetadataAliasTable Table { get; } = MetadataAliasTable.Empty
-        .Set(WellKnownMetadata.LastModified, "lastmod", "last_modified_at", "updated")
-        .Set(WellKnownMetadata.Description, "summary", "excerpt")
-        .Set(WellKnownMetadata.Author, "authors")
-        .Set(WellKnownMetadata.Language, "language")
-        .Set(WellKnownMetadata.Layout, "template");
+    public static MetadataAliasTable Table { get; } = MetadataAliasTable.Empty;
 }

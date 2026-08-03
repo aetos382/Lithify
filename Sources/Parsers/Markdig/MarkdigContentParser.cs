@@ -169,7 +169,6 @@ internal sealed class MarkdigContentParser :
 
         // 形式は source.Format ではなくこのパーサーが扱う形式にする。
         // 呼び出し側が別の形式を持つ ContentSource を渡しても、実際に解釈したのは Markdown である。
-        return WellKnownMetadataMapper.Map(
-            metadata, this._aliases, ContentFormat.Markdown, source.Path, diagnostics);
+        return WellKnownMetadataMapper.Map(metadata, this._aliases, ContentFormat.Markdown);
     }
 }

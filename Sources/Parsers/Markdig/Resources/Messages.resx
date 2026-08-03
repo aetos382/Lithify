@@ -38,10 +38,10 @@
   </data>
   <data name="LinkTargetNotResolvable" xml:space="preserve">
     <value>The link target '{0}' could not be interpreted as a URI or as a path within the site, so it was left as written.</value>
-    <comment>Warning diagnostic LI3120. {0} is the link target as written in the source.</comment>
+    <comment>Warning diagnostic LI3107. {0} is the link target as written in the source.</comment>
   </data>
   <data name="BlockNotRepresentable" xml:space="preserve">
     <value>A {0} block has no equivalent in the common AST, so its own structure was dropped.</value>
-    <comment>Warning diagnostic LI3121. {0} is the Markdig block type name.</comment>
+    <comment>Warning diagnostic LI3108. {0} is the Markdig block type name.</comment>
   </data>
 </root>
